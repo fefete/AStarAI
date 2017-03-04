@@ -35,16 +35,16 @@ public class AStarManager : MonoBehaviour
     public void calculatePath(Node start, Node end)
     {
         Debug.Log("start algorithm");
-        List<Node> openList = new List<Node>();
-        List<Node> closeList = new List<Node>();
-        Node start_node = start;
-        Node end_node = end;
+        List<NodeData> openList = new List<NodeData>();
+        List<NodeData> closeList = new List<NodeData>();
+        NodeData start_node = start.data;
+        NodeData end_node = end.data;
 
         start_node.F = 0;
         start_node.G = 0;
         start_node.H = 0;
 
-        Node current_node = start;
+        NodeData current_node = start.data;
         // Put node_start on the OPEN list
         openList.Add(start_node);
         // while the OPEN list is not empty
@@ -63,24 +63,24 @@ public class AStarManager : MonoBehaviour
             }
             openList.RemoveAt(index_to_remove);
             // If node_current is the same state as node_goal: break from the while loop
-            if (current_node.x == end.x &&
-                current_node.y == end.y)
+            if (current_node.x == end.data.x &&
+                current_node.y == end.data.y)
             {
                 closeList.Add(current_node);
                 break;
             }
             // Generate each state node_successor that can come after node_current
-            List<Node> successors = new List<Node>();
+            List<NodeData> successors = new List<NodeData>();
             successors.Clear();
-            for (int i = 0; i < current_node.accessibleNodes.Length; i++)
+            for (int i = 0; i < current_node.parent.accessibleNodes.Length; i++)
             {
-                Node n;
-                n = Instantiate(current_node.accessibleNodes[i]);
-                n.F = current_node.accessibleNodes[i].F;
-                n.G = current_node.accessibleNodes[i].G;
-                n.H = current_node.accessibleNodes[i].H;
-                n.x = current_node.accessibleNodes[i].x;
-                n.y = current_node.accessibleNodes[i].y;
+                NodeData n = new NodeData();
+                n.parent = current_node.parent.accessibleNodes[i];
+                n.F = current_node.parent.accessibleNodes[i].F;
+                n.G = current_node.parent.accessibleNodes[i].G;
+                n.H = current_node.parent.accessibleNodes[i].H;
+                n.x = current_node.parent.accessibleNodes[i].data.x;
+                n.y = current_node.parent.accessibleNodes[i].data.y;
                 //set the cost to the distance, maybe.
                 successors.Add(n);
             }
@@ -88,7 +88,7 @@ public class AStarManager : MonoBehaviour
             for (int i = 0; i < successors.Count; i++)
             {
                 // Set the G of node_successor to be the G of node_current plus the G to get to node_successor from node_current
-                successors[i].G = current_node.G + successors[i].cost_to_arrive;
+                successors[i].G = current_node.G + successors[i].G;
                 // Find node_successor on the OPEN list
                 bool found_in_open_list = false;
                 for (int a = 0; a < openList.Count; a++)
@@ -110,8 +110,8 @@ public class AStarManager : MonoBehaviour
                 bool found_in_close_list = false;
                 for (int a = 0; a < closeList.Count; a++)
                 {
-                    if (successors[i].transform.position.x == closeList[a].transform.position.x &&
-                         successors[i].transform.position.y == closeList[a].transform.position.y)
+                    if (successors[i].x == closeList[a].x &&
+                         successors[i].y == closeList[a].y)
                     {
                         if (successors[i].G >= closeList[a].G)
                         {
@@ -142,8 +142,9 @@ public class AStarManager : MonoBehaviour
                 }
 
                 // Set the point2D of node_successor to node_current
-                current_node.x = successors[i].x;
-                current_node.y = successors[i].y;
+                //this makes no fucking sense, so i removed it
+                //current_node.x = successors[i].x;
+                //current_node.y = successors[i].y;
                 //CHECK THIS PART.
 
                 // Set h to be the estimated distance to node_goal (using the H function)
@@ -161,9 +162,9 @@ public class AStarManager : MonoBehaviour
             }
             closeList.Add(current_node);
         }
-        foreach(Node n in closeList)
+        foreach(NodeData n in closeList)
         {
-            Debug.Log(n.transform.position);
+            n.parent.GetComponent<Renderer>().material.color = Color.green;
         }
     }
 
