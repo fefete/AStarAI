@@ -6,6 +6,8 @@ public class AStarManager : MonoBehaviour
 {
     static AStarManager instance = null;
     private Node[] nodesInWorld;
+    public short number_of_listening_threads;
+    
     // Use this for initialization
     void Start()
     {
@@ -32,7 +34,7 @@ public class AStarManager : MonoBehaviour
 
     }
 
-    public void calculatePath(Node start, Node end)
+    public void calculatePath(Node start, Node end, out Vector2[] path)
     {
         Debug.Log("start algorithm");
         List<NodeData> openList = new List<NodeData>();
@@ -162,9 +164,14 @@ public class AStarManager : MonoBehaviour
             }
             closeList.Add(current_node);
         }
+        int counter = 0;
+        path = new Vector2[closeList.Count];
         foreach(NodeData n in closeList)
         {
             n.parent.GetComponent<Renderer>().material.color = Color.green;
+            path[counter].x = n.x;
+            path[counter].y = n.y;
+            counter++;
         }
     }
 

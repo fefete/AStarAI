@@ -76,9 +76,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\AStarManager.cs" />
+    <Compile Include="Assets\Agent.cs" />
+    <Compile Include="Assets\Body.cs" />
+    <Compile Include="Assets\Message.cs" />
+    <Compile Include="Assets\Mind.cs" />
     <Compile Include="Assets\Node.cs" />
     <Compile Include="Assets\NodeData.cs" />
-    <Compile Include="Assets\SimpleAgent.cs" />
+    <Compile Include="Assets\Sensor.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="GenerateTargetFrameworkMonikerAttribute" />
