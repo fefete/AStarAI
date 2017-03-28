@@ -13,7 +13,8 @@ public class AISight : MonoBehaviour {
     // Private Variables
     private List<GameObject> enemieInView;
     string enemyTag;
-    private bool hasTarget;
+    public bool hasTarget;
+    private GameObject target_;
 
     // Use this for initialization
     void Start()
@@ -48,13 +49,18 @@ public class AISight : MonoBehaviour {
         if(enemieInView.Count > 0)
         {
             // Look at the closest target 
-            GameObject target = FindClosestObject(enemieInView);
+            target_ = FindClosestObject(enemieInView);
    
-            gameObject.transform.LookAt(target.transform);
+            gameObject.transform.LookAt(target_.transform);
             hasTarget = true;
+
+        }else
+        {
+            hasTarget = false;
+            target_ = null;
         }
 
-        Debug.Log(enemieInView.Count);
+        Debug.Log("In View : " + enemieInView.Count);
 
         DetectEnemies();
 	}
@@ -136,6 +142,11 @@ public class AISight : MonoBehaviour {
         }
 
         return closest;
+    }
+
+    public GameObject GetTarget()
+    {
+        return target_;
     }
 
 }

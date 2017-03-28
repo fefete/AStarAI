@@ -13,13 +13,11 @@
     <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>Unity Subset v3.5</TargetFrameworkProfile>
-    <CompilerResponseFile>
-    </CompilerResponseFile>
+    <CompilerResponseFile></CompilerResponseFile>
     <UnityProjectType>Game:1</UnityProjectType>
     <UnityBuildTarget>StandaloneWindows:5</UnityBuildTarget>
     <UnityVersion>5.5.1f1</UnityVersion>
-    <RootNamespace>
-    </RootNamespace>
+    <RootNamespace></RootNamespace>
     <LangVersion Condition=" '$(VisualStudioVersion)' != '10.0' ">4</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -77,6 +75,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\AIUnit\AISight.cs" />
+    <Compile Include="Assets\Scripts\AIUnit\AIUnit.cs" />
+    <Compile Include="Assets\Scripts\AIUnit\CaptureState.cs" />
+    <Compile Include="Assets\Scripts\AIUnit\DefendState.cs" />
     <Compile Include="Assets\Scripts\Pathfinding\AStarManager.cs" />
     <Compile Include="Assets\Scripts\Pathfinding\Agent.cs" />
     <Compile Include="Assets\Scripts\Pathfinding\Body.cs" />
@@ -84,10 +86,8 @@
     <Compile Include="Assets\Scripts\Pathfinding\Mind.cs" />
     <Compile Include="Assets\Scripts\Pathfinding\Node.cs" />
     <Compile Include="Assets\Scripts\Pathfinding\NodeData.cs" />
-    <Compile Include="Assets\Scripts\AIUnit\AISight.cs" />
-    <Compile Include="Assets\Scripts\AIUnit\AIUnit.cs" />
-    <Compile Include="Assets\Scripts\World\WorldManager.cs" />
     <Compile Include="Assets\Scripts\Pathfinding\Sensor.cs" />
+    <Compile Include="Assets\Scripts\World\WorldManager.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="GenerateTargetFrameworkMonikerAttribute" />
