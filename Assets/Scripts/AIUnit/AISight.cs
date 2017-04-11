@@ -60,8 +60,6 @@ public class AISight : MonoBehaviour {
             target_ = null;
         }
 
-        Debug.Log("In View : " + enemieInView.Count);
-
         DetectEnemies();
 	}
 

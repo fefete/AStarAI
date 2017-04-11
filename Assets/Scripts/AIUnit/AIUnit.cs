@@ -27,7 +27,7 @@ public class AIUnit : MonoBehaviour {
     private bool enemeyFlagCaptured_;
     private Team team_;
 
-    private Vector2[] path_;
+    public Vector2[] path_;
 
     //Public Variables
     public WorldManager worldManager_;
@@ -40,7 +40,8 @@ public class AIUnit : MonoBehaviour {
     public float health;
     public float maxChaseDistance;
 
-    //decision variables
+    public Node startNode;
+    public Node targetNode;
 
     // Use this for initialization
     void Start () {
@@ -54,12 +55,16 @@ public class AIUnit : MonoBehaviour {
         teamFlagCaptured_ = false;
         enemeyFlagCaptured_ = false;
 
+        Renderer rend = GetComponent<Renderer>();
+
         if(teamTag_ == "BlueTeam")
         {
             team_ = Team.Blue;
+            rend.material.color = Color.blue;
         }else
         {
             team_ = Team.Red;
+            rend.material.color = Color.red;
         }
 
         captureState_ = this.GetComponent<CaptureState>();

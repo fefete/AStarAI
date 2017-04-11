@@ -34,18 +34,27 @@ public class CaptureState : MonoBehaviour {
         retreating_ = false;
 
         //Get Path to Flag
-       // aiUnit_.getNewPath();
+        aiUnit_.getNewPath(aiUnit_.startNode, aiUnit_.targetNode);
+
 	}
 	
 	// Update is called once per frame
 	void Update () {
 
-        //TODO: Fix this / move it
+        //TODO: Fix this / move 
+
         if (aiSight_.hasTarget)
         {
             enemyUnitTarget_ = aiSight_.GetTarget();
-            aiUnit_.shoot(enemyUnitTarget_);
-            subState = SubState.Fighting;
+
+            float distToTarget = Vector3.Distance(enemyUnitTarget_.transform.position, transform.position);
+
+            if (distToTarget < 45.0f)
+            {
+                //enemyUnitTarget_ = aiSight_.GetTarget();
+                aiUnit_.shoot(enemyUnitTarget_);
+                subState = SubState.Fighting;
+            }
         }else
         {
             enemyUnitTarget_ = null;
@@ -84,10 +93,8 @@ public class CaptureState : MonoBehaviour {
 
                 if(aiUnit_.health > 50)  // enemy out of sight / retreating
                 {
-                    Debug.Log("Appleasss");
                     startOfChasePoint = new Vector3(-8.37f, 1.141f, 0.0f); // Find Nearest Node and use x,y,z coords as return point
                     subState = SubState.Chase;
-
                 }
 
                 switch (subState)
@@ -98,9 +105,13 @@ public class CaptureState : MonoBehaviour {
 
                         if (distFromBeginChase < aiUnit_.maxChaseDistance && retreating_ == false)
                         {
-                            //float  = Vector3.Distance(target.transform.position, startPoint);
+                            float dist  = Vector3.Distance(enemyUnitTarget_.transform.position, transform.position);
 
-                            transform.position = Vector3.MoveTowards(transform.position, enemyUnitTarget_.transform.position, 0.1f);
+                            //Stop moving/chasing when close enough to the enemy 
+                            if (dist > 5.0f)
+                            {
+                                  transform.position = Vector3.MoveTowards(transform.position, enemyUnitTarget_.transform.position, 0.1f);
+                            }
                         }
                         else
                         {
@@ -114,8 +125,6 @@ public class CaptureState : MonoBehaviour {
                             }
 
                         }
-
-                        Debug.Log("Dist: " + distFromBeginChase);
                         break;
                 }
 
@@ -123,9 +132,6 @@ public class CaptureState : MonoBehaviour {
 
         }
 
-
-
     }
-
 
 }

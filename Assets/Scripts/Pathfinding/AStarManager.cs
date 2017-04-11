@@ -168,7 +168,7 @@ public class AStarManager : MonoBehaviour
         path = new Vector2[closeList.Count];
         foreach(NodeData n in closeList)
         {
-            n.parent.GetComponent<Renderer>().material.color = Color.green;
+            //n.parent.GetComponent<Renderer>().material.color = Color.green;
             path[counter].x = n.x;
             path[counter].y = n.y;
             counter++;

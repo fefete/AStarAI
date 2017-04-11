@@ -79,6 +79,7 @@
     <Compile Include="Assets\Scripts\AIUnit\AIUnit.cs" />
     <Compile Include="Assets\Scripts\AIUnit\CaptureState.cs" />
     <Compile Include="Assets\Scripts\AIUnit\DefendState.cs" />
+    <Compile Include="Assets\Scripts\CameraMovement.cs" />
     <Compile Include="Assets\Scripts\Pathfinding\AStarManager.cs" />
     <Compile Include="Assets\Scripts\Pathfinding\Agent.cs" />
     <Compile Include="Assets\Scripts\Pathfinding\Body.cs" />
