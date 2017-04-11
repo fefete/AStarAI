@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Node : MonoBehaviour {
 
-    public Node[] accessibleNodes;
+    public List<Node> accessibleNodes;
     public NodeData data;
     public float G;
     public float H;
