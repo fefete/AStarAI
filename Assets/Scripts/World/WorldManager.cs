@@ -13,6 +13,12 @@ public class WorldManager : MonoBehaviour {
     public bool testBT;
     public bool testRT;
 
+    public GameObject blueFlag;
+    public GameObject redFlag;
+
+    public GameObject blueTeamFlagCarrier { get; set; }
+    public GameObject redTeamFlagCarrier { get; set; }
+
     // Use this for initialization
     void Start () {
 
@@ -25,8 +31,20 @@ public class WorldManager : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 
-        BT_FlagCaptured = testBT;
-        RT_FlagCaptured = testRT;
+        Debug.Log("Red: " + RT_FlagCaptured);
+        Debug.Log("Blue: " + BT_FlagCaptured);
+
+        if(RT_FlagCaptured == true)
+        {
+            redFlag.transform.position = blueTeamFlagCarrier.transform.position;
+            blueTeamFlagCarrier.GetComponent<AIUnit>().hasFlag = true;
+        }
+        else if(BT_FlagCaptured == true)
+        {
+            blueFlag.transform.position = redTeamFlagCarrier.transform.position;
+            redTeamFlagCarrier.GetComponent<AIUnit>().hasFlag = true;
+        }
+
 
 	}
 }

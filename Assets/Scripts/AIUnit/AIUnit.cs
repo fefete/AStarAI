@@ -5,7 +5,7 @@ using UnityEngine;
 public class AIUnit : MonoBehaviour {
 
     //Team Enume
-    private enum Team
+    public enum Team
     {
         Red, Blue
     }
@@ -25,9 +25,11 @@ public class AIUnit : MonoBehaviour {
     private string teamTag_;
     private bool teamFlagCaptured_;
     private bool enemeyFlagCaptured_;
-    private Team team_;
+    private int IDXcounter_;
+    public Team team_;
 
-    public Vector2[] path_;
+    //public Vector3[] path_;
+    public List<Vector3> path_;
 
     //Public Variables
     public WorldManager worldManager_;
@@ -42,6 +44,9 @@ public class AIUnit : MonoBehaviour {
 
     public Node startNode;
     public Node targetNode;
+    public Node deliveryNode;
+
+    public bool hasFlag;
 
     // Use this for initialization
     void Start () {
@@ -72,6 +77,13 @@ public class AIUnit : MonoBehaviour {
 
         captureState_.enabled = false;
         defendState_.enabled = false;
+
+        //StartCoroutine("waitToStart");
+
+        startNode = getClosestNode();
+
+        IDXcounter_ = 0;
+        hasFlag = false;
 
     }
 	
@@ -147,9 +159,37 @@ public class AIUnit : MonoBehaviour {
 
     }
 
+    IEnumerator waitToStart()
+    {
+        while(AStarManager_.ready == false)
+        {
+            yield return null;
+        }
+    }
+
     public void getNewPath(Node startNode, Node endNode)
     {
         AStarManager_.calculatePath(startNode, endNode, out path_);
+    }
+
+    public Node getClosestNode()
+    {
+        return AStarManager_.getNearestNode(this.transform);
+    }
+
+    public void moveAlongPath()
+    {
+        Vector3 targetNode = path_[IDXcounter_];
+
+        float distToNode = Vector3.Distance(transform.position, targetNode);
+
+        if (IDXcounter_ != path_.Count - 1 && distToNode < 1.0f)
+        {
+            IDXcounter_++;
+        }
+
+
+        transform.position = Vector3.MoveTowards(transform.position, targetNode, 7.5f * Time.deltaTime);
     }
 
     public void shoot(GameObject target)
@@ -162,9 +202,63 @@ public class AIUnit : MonoBehaviour {
         Debug.Log(this.gameObject.name + " is running away from a fight");
     }
 
-    public void chase(GameObject target, Vector3 startPoint, float maxChaseDistance)
+    public IEnumerator deliverFlag(Node startNode)
     {
+        path_.Clear();
+        IDXcounter_ = 0;
 
+        getNewPath(startNode, deliveryNode);
+
+        Debug.Log("1");
+        while (hasFlag)
+        {
+            Debug.Log("Delivering.. " + startNode + ", " + deliveryNode);
+            moveAlongPath();
+            yield return null;
+        }
+    }
+
+    public IEnumerator chase(Vector3 startOfChasePoint, GameObject enemyUnit)
+    {
+        bool canChase = true;
+        while (canChase == true)
+        {
+            float distFromBeginChase = Vector3.Distance(transform.position, startOfChasePoint);
+
+            if (distFromBeginChase < maxChaseDistance)
+            {
+                float dist = Vector3.Distance(enemyUnit.transform.position, transform.position);
+
+                //Stop moving/chasing when close enough to the enemy 
+                if (dist > 5.0f)
+                {
+                    transform.position = Vector3.MoveTowards(transform.position, enemyUnit.transform.position, Time.deltaTime);
+                }
+            }
+            else
+            {
+                canChase = false;
+            }
+
+            yield return null;
+        }
+    }
+
+    public IEnumerator retreat(Vector3 returnPoint)
+    {
+        bool done = true;
+        while (done == true)
+        {
+            Debug.Log("Cant chase anymore, should go back to start point");
+            transform.position = Vector3.MoveTowards(transform.position, returnPoint, 0.1f);
+
+            if (transform.position == returnPoint)
+            {
+                done = false;
+            }
+
+            yield return null;
+        }
 
     }
 

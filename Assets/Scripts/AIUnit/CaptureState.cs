@@ -19,11 +19,24 @@ public class CaptureState : MonoBehaviour {
         // Retrieve - Kill enemy flag Carrier (get your team flag back)
         // Fighting - Currently in combat
         //
-        CoverFlagCarrier, Retrieve, Fighting, Chase, Retreat
+        DeliverFlag, CoverFlagCarrier, Retrieve, Fighting, Chase, Retreat
     }
 
     //Set State Variables
-    public SubState subState { get; set; }
+    private SubState subState_;
+    public SubState subState
+    {
+        get
+        {
+            return subState_;
+        }
+        set
+        {
+            //exitState(subState_)
+            subState_ = value;
+            changeState(subState_);
+        }
+    }
 
     // Use this for initialization
     void Start () {
@@ -42,25 +55,33 @@ public class CaptureState : MonoBehaviour {
 	void Update () {
 
         //TODO: Fix this / move 
-
-        if (aiSight_.hasTarget)
+        if (aiUnit_.path_.Count != 0)
         {
-            enemyUnitTarget_ = aiSight_.GetTarget();
-
-            float distToTarget = Vector3.Distance(enemyUnitTarget_.transform.position, transform.position);
-
-            if (distToTarget < 45.0f)
-            {
-                //enemyUnitTarget_ = aiSight_.GetTarget();
-                aiUnit_.shoot(enemyUnitTarget_);
-                subState = SubState.Fighting;
-            }
-        }else
-        {
-            enemyUnitTarget_ = null;
+            aiUnit_.moveAlongPath();
         }
 
-        switch (subState)
+        //if (aiSight_.hasTarget)
+        //{
+        //    enemyUnitTarget_ = aiSight_.GetTarget();
+
+        //    float distToTarget = Vector3.Distance(enemyUnitTarget_.transform.position, transform.position);
+
+        //    if (distToTarget < 45.0f)
+        //    {
+        //        //enemyUnitTarget_ = aiSight_.GetTarget();
+        //        //aiUnit_.shoot(enemyUnitTarget_);
+        //        //subState = SubState.Fighting;
+        //    }
+        //}
+        //else
+        //{
+        //    enemyUnitTarget_ = null;
+        //}
+    }
+
+    void changeState(SubState newState)
+    {
+        switch (newState)
         {
             case SubState.Retrieve:
                 //TODO: Add Decision Making Here
@@ -73,11 +94,18 @@ public class CaptureState : MonoBehaviour {
 
             break;
 
+            case SubState.DeliverFlag:
+                Debug.Log("Deliver State");
+                Node startNode = aiUnit_.getClosestNode();
+                StartCoroutine(aiUnit_.GetComponent<AIUnit>().deliverFlag(startNode));
+
+            break;
+
             case SubState.CoverFlagCarrier:
                 //TODO: Add Decision Making Here
                 // Get path to flag carrier
                 // Shoot closest enemy
-            break;
+                break;
 
             case SubState.Fighting:
                 //TODO: Add Decision Making Here
@@ -86,52 +114,41 @@ public class CaptureState : MonoBehaviour {
                 // If enemy ran away
                 // Chase (how long / far) ? 
 
-                if(aiUnit_.health < 20)
-                {
-                    aiUnit_.flee();
-                }
+                //if (aiUnit_.health < 20)
+                //{
+                //    aiUnit_.flee();
+                //}
 
-                if(aiUnit_.health > 50)  // enemy out of sight / retreating
-                {
-                    startOfChasePoint = new Vector3(-8.37f, 1.141f, 0.0f); // Find Nearest Node and use x,y,z coords as return point
-                    subState = SubState.Chase;
-                }
+                //if (aiUnit_.health > 50)  // enemy out of sight / retreating
+                //{
+                //    Node closestNode = aiUnit_.getClosestNode();
 
-                switch (subState)
-                {
-                    case SubState.Chase:
-
-                        float distFromBeginChase = Vector3.Distance(transform.position, startOfChasePoint);
-
-                        if (distFromBeginChase < aiUnit_.maxChaseDistance && retreating_ == false)
-                        {
-                            float dist  = Vector3.Distance(enemyUnitTarget_.transform.position, transform.position);
-
-                            //Stop moving/chasing when close enough to the enemy 
-                            if (dist > 5.0f)
-                            {
-                                  transform.position = Vector3.MoveTowards(transform.position, enemyUnitTarget_.transform.position, 0.1f);
-                            }
-                        }
-                        else
-                        {
-                            retreating_ = true;
-                            Debug.Log("Cant chase anymore, should go back to start point");
-                            transform.position = Vector3.MoveTowards(transform.position, startOfChasePoint, 0.1f);
-
-                            if(transform.position == startOfChasePoint)
-                            {
-                                retreating_ = false;
-                            }
-
-                        }
-                        break;
-                }
-
+                //    startOfChasePoint = GameObject.Find(closestNode.name).transform.position; // Find Nearest Node and use x,y,z coords as return point
+                //    subState = SubState.Chase;
+                //}
             break;
+
+            case SubState.Chase:
+                
+                //StartCoroutine(aiUnit_.GetComponent<AIUnit>().chase(startOfChasePoint, enemyUnitTarget_));
+             
+            break;
+
 
         }
 
+    }
+
+    public void OnTriggerEnter(Collider other)
+    {
+        if(other.gameObject.name == "RedFlag" && aiUnit_.team_ != AIUnit.Team.Red)
+        {
+            subState = SubState.DeliverFlag;
+        }
+        if(other.gameObject.name == "BlueFlag" && aiUnit_.team_ != AIUnit.Team.Blue)
+        {
+            subState = SubState.DeliverFlag;
+        }
     }
 
 }

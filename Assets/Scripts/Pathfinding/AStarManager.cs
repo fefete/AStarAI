@@ -7,6 +7,7 @@ public class AStarManager : MonoBehaviour
     static AStarManager instance = null;
     private Node[] nodesInWorld;
     public short number_of_listening_threads;
+    public bool ready = false;
     
     // Use this for initialization
     void Start()
@@ -22,7 +23,7 @@ public class AStarManager : MonoBehaviour
                 }
             }
         }
-        Debug.Log("Potato");
+        ready = true;
     }
 
     void Awake()
@@ -45,7 +46,7 @@ public class AStarManager : MonoBehaviour
 
     }
     bool done = false;
-    public void calculatePath(Node start, Node end, out Vector2[] path)
+    public void calculatePath(Node start, Node end, out List<Vector3> path)
     {
         Debug.Log("start algorithm");
         List<NodeData> openList = new List<NodeData>();
@@ -176,14 +177,16 @@ public class AStarManager : MonoBehaviour
             closeList.Add(current_node);
         }
         int counter = 0;
-        path = new Vector2[closeList.Count];
+        path = new List<Vector3>();//[closeList.Count];
         foreach(NodeData n in closeList)
         {
             if (!done) { 
-            n.parent.GetComponent<Renderer>().material.color = Color.green;
+            //n.parent.GetComponent<Renderer>().material.color = Color.green;
             }
-            path[counter].x = n.x;
-            path[counter].y = n.z;
+            path.Add(new Vector3(n.x, 1.0f, n.z));
+            //path[counter].x = n.x;
+            //path[counter].y = 1.0f;
+            //path[counter].z = n.z;
             counter++;
         }
         done = true;
@@ -192,5 +195,25 @@ public class AStarManager : MonoBehaviour
     public static AStarManager getInstance()
     {
         return instance;
+    }
+
+    public Node getNearestNode(Transform aiUnitPosition)
+    {
+        Node closestNode = null;
+        float minDist = Mathf.Infinity;
+        foreach(Node current in nodesInWorld)
+        {
+            GameObject nodeObj = GameObject.Find(current.name);
+
+            float dist = Vector3.Distance(nodeObj.transform.position, aiUnitPosition.position);
+            if(dist < minDist)
+            {
+                closestNode = current;
+                minDist = dist;
+            }
+
+        }
+        return closestNode;
+
     }
 }
