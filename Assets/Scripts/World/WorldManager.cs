@@ -31,8 +31,8 @@ public class WorldManager : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 
-        Debug.Log("Red: " + RT_FlagCaptured);
-        Debug.Log("Blue: " + BT_FlagCaptured);
+        //Debug.Log("Red: " + RT_FlagCaptured);
+        //Debug.Log("Blue: " + BT_FlagCaptured);
 
         if(RT_FlagCaptured == true)
         {

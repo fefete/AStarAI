@@ -30,6 +30,7 @@ public class AIUnit : MonoBehaviour {
 
     //public Vector3[] path_;
     public List<Vector3> path_;
+    public List<Node> Npath_;
 
     //Public Variables
     public WorldManager worldManager_;
@@ -169,7 +170,7 @@ public class AIUnit : MonoBehaviour {
 
     public void getNewPath(Node startNode, Node endNode)
     {
-        AStarManager_.calculatePath(startNode, endNode, out path_);
+        AStarManager_.calculatePath(startNode, endNode, out path_, out Npath_);
     }
 
     public Node getClosestNode()
@@ -181,15 +182,15 @@ public class AIUnit : MonoBehaviour {
     {
         Vector3 targetNode = path_[IDXcounter_];
 
-        float distToNode = Vector3.Distance(transform.position, targetNode);
+        float distToNode = Vector3.Distance(transform.position, new Vector3(targetNode.x, targetNode.y, targetNode.z));
 
-        if (IDXcounter_ != path_.Count - 1 && distToNode < 1.0f)
+        if (IDXcounter_ != path_.Count - 1 && distToNode < 0.1f)
         {
             IDXcounter_++;
         }
 
 
-        transform.position = Vector3.MoveTowards(transform.position, targetNode, 7.5f * Time.deltaTime);
+        transform.position = Vector3.MoveTowards(transform.position, new Vector3(targetNode.x, targetNode.y, targetNode.z), 7.5f * Time.deltaTime);
     }
 
     public void shoot(GameObject target)

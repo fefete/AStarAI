@@ -8,20 +8,29 @@ public class AStarManager : MonoBehaviour
     private Node[] nodesInWorld;
     public short number_of_listening_threads;
     public bool ready = false;
-    
+
     // Use this for initialization
     void Start()
     {
         RaycastHit hit = new RaycastHit();
-        foreach (Node actual in nodesInWorld) {
-            foreach (Node toCheck in nodesInWorld) {
+        foreach (Node actual in nodesInWorld)
+        {
+            foreach (Node toCheck in nodesInWorld)
+            {
                 if (actual.gameObject == toCheck.gameObject) continue;
-                if (Physics.Raycast(actual.transform.position, toCheck.transform.position - actual.transform.position, out hit)) {
-                    if (hit.transform.gameObject == toCheck.gameObject) {
+                if (Physics.Raycast(actual.transform.position, toCheck.transform.position - actual.transform.position, out hit))
+                {
+                    if (hit.transform.gameObject == toCheck.gameObject)
+                    {
+                        //Debug.DrawRay(actual.transform.position, toCheck.transform.position - actual.transform.position, Color.magenta, 1000000);
                         actual.accessibleNodes.Add(toCheck);
                     }
                 }
             }
+        }
+        foreach (Node actual in nodesInWorld)
+        {
+            actual.GetComponent<BoxCollider>().enabled = false;
         }
         ready = true;
     }
@@ -37,7 +46,7 @@ public class AStarManager : MonoBehaviour
             Destroy(gameObject);
         }
 
-       nodesInWorld = FindObjectsOfType<Node>();
+        nodesInWorld = FindObjectsOfType<Node>();
     }
 
     // Update is called once per frame
@@ -46,7 +55,7 @@ public class AStarManager : MonoBehaviour
 
     }
     bool done = false;
-    public void calculatePath(Node start, Node end, out List<Vector3> path)
+    public void calculatePath(Node start, Node end, out List<Vector3> path, out List<Node> nodesInPath)
     {
         Debug.Log("start algorithm");
         List<NodeData> openList = new List<NodeData>();
@@ -77,8 +86,7 @@ public class AStarManager : MonoBehaviour
             }
             openList.RemoveAt(index_to_remove);
             // If node_current is the same state as node_goal: break from the while loop
-            if (current_node.x == end.data.x &&
-                current_node.z == end.data.z)
+            if (current_node.node.transform.position == end.transform.position)
             {
                 closeList.Add(current_node);
                 break;
@@ -86,30 +94,30 @@ public class AStarManager : MonoBehaviour
             // Generate each state node_successor that can come after node_current
             List<NodeData> successors = new List<NodeData>();
             successors.Clear();
-            for (int i = 0; i < current_node.parent.accessibleNodes.Count; i++)
+            for (int i = 0; i < current_node.node.accessibleNodes.Count; i++)
             {
                 NodeData n = new NodeData();
-                n.parent = current_node.parent.accessibleNodes[i];
-                n.F = current_node.parent.accessibleNodes[i].F;
-                n.G = current_node.parent.accessibleNodes[i].G;
-                n.H = current_node.parent.accessibleNodes[i].H;
-                n.x = current_node.parent.accessibleNodes[i].data.x;
-                n.z = current_node.parent.accessibleNodes[i].data.z;
-                //set the cost to the distance, maybe.
+                n.node = current_node.node.accessibleNodes[i];
+                n.F = n.node.F;
+                n.G = n.node.G + 1.0f;
+                n.H = n.node.H;
+                n.name = n.node.gameObject.name;
                 successors.Add(n);
             }
+
             // For each node_successor of node_current
             for (int i = 0; i < successors.Count; i++)
             {
+                RaycastHit hit;
                 // Set the G of node_successor to be the G of node_current plus the G to get to node_successor from node_current
-                successors[i].G = current_node.G + successors[i].G;
+                successors[i].G = successors[i].G + /*current_node.G;*/Vector3.Distance(successors[i].node.transform.position, current_node.node.transform.position);
+
                 // Find node_successor on the OPEN list
                 bool found_in_open_list = false;
                 for (int a = 0; a < openList.Count; a++)
                 {
                     // If node_successor is on the OPEN list but the existing one is as good or better then discard this successor and continue with next successor
-                    if (successors[i].x == openList[a].x &&
-                         successors[i].z == openList[a].z)
+                    if (successors[i].node.transform.position == openList[a].node.transform.position)
                     {
                         if (successors[i].G >= openList[a].G)
                         {
@@ -124,8 +132,7 @@ public class AStarManager : MonoBehaviour
                 bool found_in_close_list = false;
                 for (int a = 0; a < closeList.Count; a++)
                 {
-                    if (successors[i].x == closeList[a].x &&
-                         successors[i].z == closeList[a].z)
+                    if (successors[i].node.transform.position == closeList[a].node.transform.position)
                     {
                         if (successors[i].G >= closeList[a].G)
                         {
@@ -138,55 +145,52 @@ public class AStarManager : MonoBehaviour
                 // Remove occurences of node_successor from OPEN and CLOSED
                 for (int b = 0; b < openList.Count; b++)
                 {
-                    if (openList[b].x == successors[i].x &&
-                         openList[b].z == successors[i].z)
+                    if (successors[i].node.transform.position == openList[b].node.transform.position)
                     {
                         openList.RemoveAt(b);
-                        break;
                     }
                 }
-                for (int b = 0; b < closeList.Count; b++)
+                /*for (int b = 0; b < closeList.Count; b++)
                 {
-                    if (closeList[b].x == successors[i].x &&
-                         closeList[b].z == successors[i].z)
+                    if (successors[i].node.transform.position == closeList[b].node.transform.position)
                     {
                         closeList.RemoveAt(b);
-                        break;
                     }
-                }
+                }*/
 
-                // Set the point2D of node_successor to node_current
-                //this makes no fucking sense, so i removed it
-                //current_node.x = successors[i].x;
-                //current_node.z = successors[i].z;
+                // Set the position of node_successor to node_current
+                //I dont get this
+                //if (done) Debug.DrawRay(new Vector3(current_node.x, 1.0f, current_node.z), new Vector3(successors[i].x, 1.0f, successors[i].z) - new Vector3(current_node.x, 1.0f, current_node.z), Color.magenta, 1000000);
+
+                //current_node.node = successors[i].node;
+
                 //CHECK THIS PART.
 
                 // Set h to be the estimated distance to node_goal (using the H function)
-                float final_H_X = Mathf.Pow(end_node.x - successors[i].x, 2.0f);
-                float final_H_Z = Mathf.Pow(end_node.z - successors[i].z, 2.0f);
-
-                if (final_H_X < 0) final_H_X *= -1;
-                if (final_H_Z < 0) final_H_Z *= -1;
-
-                successors[i].H = final_H_X + final_H_Z;
+                successors[i].H = Vector3.Distance(successors[i].node.transform.position, end_node.node.transform.position);
                 successors[i].F = successors[i].G + successors[i].H;
-                
+
                 // Add node_successor to the OPEN list
+
                 openList.Add(successors[i]);
             }
+
             closeList.Add(current_node);
         }
         int counter = 0;
         path = new List<Vector3>();//[closeList.Count];
-        foreach(NodeData n in closeList)
+        nodesInPath = new List<Node>();//[closeList.Count];
+        foreach (NodeData n in closeList)
         {
-            if (!done) { 
-            //n.parent.GetComponent<Renderer>().material.color = Color.green;
+
+
+            path.Add(new Vector3(n.node.transform.position.x, 1.0f, n.node.transform.position.z));
+            nodesInPath.Add(n.node);
+            if (counter != 0)
+            {
+                Debug.DrawRay(new Vector3(path[counter - 1].x, 1.0f, path[counter - 1].z), new Vector3(path[counter].x, 1.0f, path[counter].z) - new Vector3(path[counter - 1].x, 1.0f, path[counter - 1].z), Color.magenta, 10);
+
             }
-            path.Add(new Vector3(n.x, 1.0f, n.z));
-            //path[counter].x = n.x;
-            //path[counter].y = 1.0f;
-            //path[counter].z = n.z;
             counter++;
         }
         done = true;
@@ -201,12 +205,12 @@ public class AStarManager : MonoBehaviour
     {
         Node closestNode = null;
         float minDist = Mathf.Infinity;
-        foreach(Node current in nodesInWorld)
+        foreach (Node current in nodesInWorld)
         {
             GameObject nodeObj = GameObject.Find(current.name);
 
             float dist = Vector3.Distance(nodeObj.transform.position, aiUnitPosition.position);
-            if(dist < minDist)
+            if (dist < minDist)
             {
                 closestNode = current;
                 minDist = dist;

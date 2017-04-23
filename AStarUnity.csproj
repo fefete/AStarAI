@@ -75,14 +75,22 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\AStarManager.cs" />
-    <Compile Include="Assets\Agent.cs" />
-    <Compile Include="Assets\Body.cs" />
-    <Compile Include="Assets\Message.cs" />
-    <Compile Include="Assets\Mind.cs" />
-    <Compile Include="Assets\Node.cs" />
-    <Compile Include="Assets\NodeData.cs" />
-    <Compile Include="Assets\Sensor.cs" />
+    <Compile Include="Assets\Scripts\AIUnit\AISight.cs" />
+    <Compile Include="Assets\Scripts\AIUnit\AIUnit.cs" />
+    <Compile Include="Assets\Scripts\AIUnit\CaptureState.cs" />
+    <Compile Include="Assets\Scripts\AIUnit\DefendState.cs" />
+    <Compile Include="Assets\Scripts\CameraMovement.cs" />
+    <Compile Include="Assets\Scripts\NewBehaviourScript.cs" />
+    <Compile Include="Assets\Scripts\Pathfinding\AStarManager.cs" />
+    <Compile Include="Assets\Scripts\Pathfinding\Agent.cs" />
+    <Compile Include="Assets\Scripts\Pathfinding\Body.cs" />
+    <Compile Include="Assets\Scripts\Pathfinding\Message.cs" />
+    <Compile Include="Assets\Scripts\Pathfinding\Mind.cs" />
+    <Compile Include="Assets\Scripts\Pathfinding\Node.cs" />
+    <Compile Include="Assets\Scripts\Pathfinding\NodeData.cs" />
+    <Compile Include="Assets\Scripts\Pathfinding\Sensor.cs" />
+    <Compile Include="Assets\Scripts\World\Flag.cs" />
+    <Compile Include="Assets\Scripts\World\WorldManager.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="GenerateTargetFrameworkMonikerAttribute" />
