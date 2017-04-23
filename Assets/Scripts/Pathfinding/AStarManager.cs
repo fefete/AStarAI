@@ -150,13 +150,13 @@ public class AStarManager : MonoBehaviour
                         openList.RemoveAt(b);
                     }
                 }
-                /*for (int b = 0; b < closeList.Count; b++)
+                for (int b = 0; b < closeList.Count; b++)
                 {
                     if (successors[i].node.transform.position == closeList[b].node.transform.position)
                     {
                         closeList.RemoveAt(b);
                     }
-                }*/
+                }
 
                 // Set the position of node_successor to node_current
                 //I dont get this
