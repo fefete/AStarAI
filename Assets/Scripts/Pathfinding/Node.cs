@@ -32,6 +32,7 @@ public class Node : MonoBehaviour {
         data.F = F;
         data.name = gameObject.name;
         data.node = this;
+        data.CameFrom = null;
     }
 
 }

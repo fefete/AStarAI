@@ -13,4 +13,5 @@ public class NodeData {
     public float cost_to_arrive;
     public string name;
     public Node node;
+    public NodeData CameFrom;
 }

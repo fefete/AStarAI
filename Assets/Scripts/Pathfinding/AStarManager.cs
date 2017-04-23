@@ -102,13 +102,15 @@ public class AStarManager : MonoBehaviour
                 n.G = n.node.G + 1.0f;
                 n.H = n.node.H;
                 n.name = n.node.gameObject.name;
+                n.CameFrom = current_node;
+
                 successors.Add(n);
             }
 
             // For each node_successor of node_current
             for (int i = 0; i < successors.Count; i++)
             {
-                RaycastHit hit;
+                //RaycastHit hit;
                 // Set the G of node_successor to be the G of node_current plus the G to get to node_successor from node_current
                 successors[i].G = successors[i].G + /*current_node.G;*/Vector3.Distance(successors[i].node.transform.position, current_node.node.transform.position);
 
@@ -162,8 +164,6 @@ public class AStarManager : MonoBehaviour
                 //I dont get this
                 //if (done) Debug.DrawRay(new Vector3(current_node.x, 1.0f, current_node.z), new Vector3(successors[i].x, 1.0f, successors[i].z) - new Vector3(current_node.x, 1.0f, current_node.z), Color.magenta, 1000000);
 
-                //current_node.node = successors[i].node;
-
                 //CHECK THIS PART.
 
                 // Set h to be the estimated distance to node_goal (using the H function)
@@ -174,13 +174,34 @@ public class AStarManager : MonoBehaviour
 
                 openList.Add(successors[i]);
             }
-
             closeList.Add(current_node);
         }
         int counter = 0;
         path = new List<Vector3>();//[closeList.Count];
         nodesInPath = new List<Node>();//[closeList.Count];
-        foreach (NodeData n in closeList)
+        NodeData endNode = closeList[closeList.Count - 1];
+        for(int i = 0; i < closeList.Count; i++)
+        {   
+            if(closeList[i].CameFrom != null) { 
+                Debug.Log("" + closeList[i].name +" "+ closeList[i].CameFrom.name);
+            }else
+            {
+                Debug.Log(closeList[i].name);
+            }
+        }
+        while(endNode.CameFrom != null)
+        {
+            path.Add(new Vector3(endNode.node.transform.position.x, 1.0f, endNode.node.transform.position.z));
+            endNode = endNode.CameFrom;
+            if (counter != 0)
+            {
+                Debug.DrawRay(new Vector3(path[counter - 1].x, 1.0f, path[counter - 1].z), new Vector3(path[counter].x, 1.0f, path[counter].z) - new Vector3(path[counter - 1].x, 1.0f, path[counter - 1].z), Color.magenta, 1000000);
+
+            }
+            counter++;
+        }
+        path.Reverse();
+        /*foreach (NodeData n in closeList)
         {
 
 
@@ -188,12 +209,13 @@ public class AStarManager : MonoBehaviour
             nodesInPath.Add(n.node);
             if (counter != 0)
             {
-                Debug.DrawRay(new Vector3(path[counter - 1].x, 1.0f, path[counter - 1].z), new Vector3(path[counter].x, 1.0f, path[counter].z) - new Vector3(path[counter - 1].x, 1.0f, path[counter - 1].z), Color.magenta, 10);
+                Debug.DrawRay(new Vector3(path[counter - 1].x, 1.0f, path[counter - 1].z), new Vector3(path[counter].x, 1.0f, path[counter].z) - new Vector3(path[counter - 1].x, 1.0f, path[counter - 1].z), Color.magenta, 1000000);
 
             }
             counter++;
         }
-        done = true;
+        done = true;*/
+
     }
 
     public static AStarManager getInstance()
