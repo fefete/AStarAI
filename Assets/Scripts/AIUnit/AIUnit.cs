@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class AIUnit : MonoBehaviour {
+public class AIUnit : MonoBehaviour
+{
 
     //Team Enume
     public enum Team
@@ -50,11 +51,12 @@ public class AIUnit : MonoBehaviour {
     public bool hasFlag;
 
     // Use this for initialization
-    void Start () {
+    void Start()
+    {
 
         // Suppose this could be set with a public enum variable 
-        teamTag_ = gameObject.tag; 
-        
+        teamTag_ = gameObject.tag;
+
         // Gain Access to the world manager script
         worldManager_ = worldManager_.GetComponent<WorldManager>();
 
@@ -63,11 +65,12 @@ public class AIUnit : MonoBehaviour {
 
         Renderer rend = GetComponent<Renderer>();
 
-        if(teamTag_ == "BlueTeam")
+        if (teamTag_ == "BlueTeam")
         {
             team_ = Team.Blue;
             rend.material.color = Color.blue;
-        }else
+        }
+        else
         {
             team_ = Team.Red;
             rend.material.color = Color.red;
@@ -87,11 +90,12 @@ public class AIUnit : MonoBehaviour {
         hasFlag = false;
 
     }
-	
-	// Update is called once per frame
-	void Update () {
 
-        switch(state)
+    // Update is called once per frame
+    void Update()
+    {
+
+        switch (state)
         {
             case State.Capture:
                 defendState_.enabled = false;
@@ -162,7 +166,7 @@ public class AIUnit : MonoBehaviour {
 
     IEnumerator waitToStart()
     {
-        while(AStarManager_.ready == false)
+        while (AStarManager_.ready == false)
         {
             yield return null;
         }
@@ -180,17 +184,25 @@ public class AIUnit : MonoBehaviour {
 
     public void moveAlongPath()
     {
+        int maxIDX = path_.Count;
+
+        if (IDXcounter_ >= maxIDX)
+        {
+            IDXcounter_ = 0;
+        }
+
         Vector3 targetNode = path_[IDXcounter_];
 
-        float distToNode = Vector3.Distance(transform.position, new Vector3(targetNode.x, targetNode.y, targetNode.z));
+        float distToNode = Vector3.Distance(transform.position, targetNode);
 
-        if (IDXcounter_ != path_.Count - 1 && distToNode < 0.1f)
+        if (IDXcounter_ != path_.Count - 1 && distToNode < 1.0f)
         {
             IDXcounter_++;
         }
 
 
-        transform.position = Vector3.MoveTowards(transform.position, new Vector3(targetNode.x, targetNode.y, targetNode.z), 7.5f * Time.deltaTime);
+        transform.LookAt(targetNode);
+        transform.position = Vector3.MoveTowards(transform.position, targetNode, 7.5f * Time.deltaTime);
     }
 
     public void shoot(GameObject target)
@@ -215,6 +227,7 @@ public class AIUnit : MonoBehaviour {
         {
             Debug.Log("Delivering.. " + startNode + ", " + deliveryNode);
             moveAlongPath();
+
             yield return null;
         }
     }
@@ -261,6 +274,68 @@ public class AIUnit : MonoBehaviour {
             yield return null;
         }
 
+    }
+
+    public IEnumerator patrol(List<Node> patrolNodes)
+    {
+        int randNum = 0;
+        int lastNumberPicked = 0;
+
+        IDXcounter_ = 0;
+
+        Node currentNode = patrolNodes[0];
+        Node targetNode;
+        GameObject targetNodeObj;
+
+        randNum = Random.Range(0, patrolNodes.Count);
+
+        while (true)
+        {
+
+            if (randNum != lastNumberPicked)
+            {
+                targetNode = patrolNodes[randNum];
+
+                AStarManager_.calculatePath(currentNode, targetNode, out path_, out Npath_);
+                if (path_.Count > 0)
+                {
+                    moveAlongPath();
+
+                    targetNodeObj = GameObject.Find(targetNode.name);
+                    transform.LookAt(targetNodeObj.transform);
+
+                    float distToNode = Vector3.Distance(transform.position, targetNodeObj.transform.position);
+
+                    if (distToNode < 1.0f)
+                    {
+                        transform.position = transform.position;
+                        yield return new WaitForSeconds(4.0f);
+                        currentNode = targetNode;
+                        lastNumberPicked = randNum;
+                        randNum = Random.Range(0, patrolNodes.Count);
+                    }
+                }
+
+
+            }
+            else
+            {
+                randNum = Random.Range(0, patrolNodes.Count);
+            }
+
+            yield return null;
+        }
+    }
+
+    private int genRandNumber(int min, int max)
+    {
+        return Random.Range(min, max);
+    }
+
+    public IEnumerator wait(float duration, bool done)
+    {
+        yield return new WaitForSeconds(duration);
+        Debug.Log("Wait over");
     }
 
 }

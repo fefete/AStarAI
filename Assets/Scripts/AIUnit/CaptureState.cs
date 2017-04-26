@@ -23,7 +23,7 @@ public class CaptureState : MonoBehaviour {
     }
 
     //Set State Variables
-    private SubState subState_;
+    public SubState subState_;
     public SubState subState
     {
         get
@@ -95,7 +95,6 @@ public class CaptureState : MonoBehaviour {
             break;
 
             case SubState.DeliverFlag:
-                Debug.Log("Deliver State");
                 Node startNode = aiUnit_.getClosestNode();
                 StartCoroutine(aiUnit_.GetComponent<AIUnit>().deliverFlag(startNode));
 
@@ -141,6 +140,7 @@ public class CaptureState : MonoBehaviour {
 
     public void OnTriggerEnter(Collider other)
     {
+        //Check if the AIunit is within range of target flag
         if(other.gameObject.name == "RedFlag" && aiUnit_.team_ != AIUnit.Team.Red)
         {
             subState = SubState.DeliverFlag;
@@ -148,6 +148,18 @@ public class CaptureState : MonoBehaviour {
         if(other.gameObject.name == "BlueFlag" && aiUnit_.team_ != AIUnit.Team.Blue)
         {
             subState = SubState.DeliverFlag;
+        }
+
+        //Check if the flag carrie has made it to the delivery point
+        if (other.gameObject.name == "RedFlag" && aiUnit_.team_ == AIUnit.Team.Red && aiUnit_.hasFlag == true)
+        {
+            aiUnit_.worldManager_.BF_CapturedAndDelivered = true;
+            aiUnit_.hasFlag = false;
+        }
+        if (other.gameObject.name == "BlueFlag" && aiUnit_.team_ == AIUnit.Team.Blue && aiUnit_.hasFlag == true)
+        {
+            aiUnit_.worldManager_.RF_CapturedAndDelivered = true;
+            aiUnit_.hasFlag = false;
         }
     }
 
