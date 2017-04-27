@@ -10,14 +10,22 @@ public class WorldManager : MonoBehaviour {
     // Boolean varible to determin if the Blue Team Flag has been captured
     public bool RT_FlagCaptured { get; set; }
 
-    public bool testBT;
-    public bool testRT;
+    // Boolean Variable to determin if the captured flag was successfully deliverd
+    // **RF == RedFlag == Blue Successfully Captured and Deliverd Red Teams Flag**
+    public bool RF_CapturedAndDelivered { get; set; }
+    public bool BF_CapturedAndDelivered { get; set; }
 
     public GameObject blueFlag;
     public GameObject redFlag;
+    private Vector3 bf_basePos;
+    private Vector3 rf_basePos;
 
     public GameObject blueTeamFlagCarrier { get; set; }
     public GameObject redTeamFlagCarrier { get; set; }
+
+    //Team Score Variables
+    private int RT_Score = 0;
+    private int BT_Score = 0;
 
     // Use this for initialization
     void Start () {
@@ -26,13 +34,16 @@ public class WorldManager : MonoBehaviour {
         BT_FlagCaptured = false;
         RT_FlagCaptured = false;
 
-	}
+        RF_CapturedAndDelivered = false;
+        BF_CapturedAndDelivered = false;
+
+        bf_basePos = blueFlag.transform.position;
+        rf_basePos = redFlag.transform.position;
+
+    }
 	
 	// Update is called once per frame
 	void Update () {
-
-        //Debug.Log("Red: " + RT_FlagCaptured);
-        //Debug.Log("Blue: " + BT_FlagCaptured);
 
         if(RT_FlagCaptured == true)
         {
@@ -45,6 +56,20 @@ public class WorldManager : MonoBehaviour {
             redTeamFlagCarrier.GetComponent<AIUnit>().hasFlag = true;
         }
 
+        if(RF_CapturedAndDelivered == true)
+        {
+            RT_FlagCaptured = false;
+            BT_Score++;
+            redFlag.transform.position = rf_basePos;
+            RF_CapturedAndDelivered = false;
+        }
+        if (BF_CapturedAndDelivered == true)
+        {
+            RT_Score++;
+            BT_FlagCaptured = false;
+            blueFlag.transform.position = bf_basePos;
+            BF_CapturedAndDelivered = false;
+        }
 
-	}
+    }
 }

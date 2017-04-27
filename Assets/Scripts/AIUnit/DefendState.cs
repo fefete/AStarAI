@@ -4,15 +4,123 @@ using UnityEngine;
 
 public class DefendState : MonoBehaviour {
 
-	// Use this for initialization
-	void Start () {
-		
-	}
+    public AISight aiSight_;
+    private AIUnit aiUnit_;
+
+    public List<Node> patrolNodes;
+
+    public enum SubState
+    {
+        //
+        // Cover - Cover flag carrier
+        // Retrieve - Kill enemy flag Carrier (get your team flag back)
+        // Fighting - Currently in combat
+        //
+        Patrol, CoverFlagCarrier, Retrieve, Fighting, Chase, Retreat
+    }
+
+    //Set State Variables
+    public SubState subState_;
+    public SubState subState
+    {
+        get
+        {
+            return subState_;
+        }
+        set
+        {
+            //exitState(subState_)
+            subState_ = value;
+            changeState(subState_);
+        }
+    }
+
+    // Use this for initialization
+    void Start () {
+
+        aiUnit_ = this.GetComponent<AIUnit>();
+        aiSight_ = aiSight_.GetComponent<AISight>();
+
+        //Find the closest node to the unit, get all the other closer nodes
+        Node startNode = aiUnit_.AStarManager_.getNearestNode(this.transform);
+        GameObject startNodeObj = GameObject.Find(startNode.name);
+        patrolNodes.Add(startNode);
+
+        int numOfPatrolNodes = 4;
+        if(startNode.accessibleNodes.Count < 4)
+        {
+            numOfPatrolNodes = startNode.accessibleNodes.Count;
+        }
+
+        // add the close node to the list
+        for(int i = patrolNodes.Count; i < numOfPatrolNodes; i++)
+        {
+            GameObject nodeObj = GameObject.Find(startNode.accessibleNodes[i].name);
+            float dist = Vector3.Distance(startNodeObj.transform.position, nodeObj.transform.position);
+            if (dist < 50.0f)
+            {
+                patrolNodes.Add(startNode.accessibleNodes[i]);
+            }
+
+        }
+
+
+
+        if(patrolNodes.Count != 0)
+        {
+            subState = SubState.Patrol;
+        }
+
+    }
 	
 	// Update is called once per frame
 	void Update () {
 
-        Debug.Log("Is Defend State");
+        //get nearest node find 2/3 close nodes, randomly select which one to path to, wait randomly path to another
+
 
     }
+
+    void changeState(SubState newState)
+    {
+        switch (newState)
+        {
+            case SubState.Patrol:
+
+                StartCoroutine(aiUnit_.GetComponent<AIUnit>().patrol(patrolNodes));
+
+            break;
+
+            case SubState.Retrieve:
+                //TODO: Add Decision Making Here
+                // If NOT NEAR enemy flag, goto and recover team flag
+                // If NEAR go for flag
+                // If seen flag carrier goto and kill
+                // If alerted (messaged) goto and kill
+
+                Debug.Log("Retrive Flag");
+
+            break;
+
+            case SubState.CoverFlagCarrier:
+                //TODO: Add Decision Making Here
+                // Get path to flag carrier
+                // Shoot closest enemy
+            break;
+
+            case SubState.Fighting:
+
+            break;
+
+            case SubState.Chase:
+
+                //StartCoroutine(aiUnit_.GetComponent<AIUnit>().chase(startOfChasePoint, enemyUnitTarget_));
+
+            break;
+
+
+        }
+
+    }
+
 }

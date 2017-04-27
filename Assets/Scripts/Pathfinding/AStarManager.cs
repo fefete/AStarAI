@@ -57,7 +57,7 @@ public class AStarManager : MonoBehaviour
     bool done = false;
     public void calculatePath(Node start, Node end, out List<Vector3> path, out List<Node> nodesInPath)
     {
-        Debug.Log("start algorithm");
+        //Debug.Log("start algorithm");
         List<NodeData> openList = new List<NodeData>();
         List<NodeData> closeList = new List<NodeData>();
         NodeData start_node = start.data;
