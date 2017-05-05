@@ -7,6 +7,31 @@ public class NaiveBayes : MonoBehaviour
 {
     Dictionary<bool, List<List<int>>> classMap;
     List<string> listA = new List<string>();
+
+    //data for class
+    int NumberOfWins;
+    int NumberOfLoses;
+
+    //data for agent class
+    int countClassA;
+    int countClassB;
+    float meanClassA;
+    float meanClassB;
+
+    int countHealty;
+    int countUnhealthy;
+    float meanHealty;
+    float meanUnhealthy;
+
+    int countPathA;
+    int countPathB;
+    int countPathC;
+    float meanPathA;
+    float meanPathB;
+    float meanPathC;
+
+    float finalValue;
+
     struct Data
     {
         //Win or lose
@@ -32,11 +57,93 @@ public class NaiveBayes : MonoBehaviour
 
     }
 
-    void Classify()
+    void Classify(int classtype)
     {
+        float valuePathA = 0;
+        float valuePathB = 0;
+        float valuePathC = 0;
+
+        if (classtype == 0)
+        {
+            //p(win ¦ pathA, class0, Healty)
+             valuePathA = meanPathA + meanClassA + meanHealty;
+
+            //p(win ¦ pathB, class0, Healty)
+            valuePathB = meanPathB + meanClassA + meanHealty;
+
+            //p(win ¦ pathC, class0, Healty)
+            valuePathC = meanPathC + meanClassA + meanHealty; ;
+        }
+        else {
+            //p(win ¦ pathA, class1, Healty)
+            valuePathA = meanPathA + meanClassB + meanHealty;
+
+            //p(win ¦ pathB, class1, Healty)
+            valuePathB = meanPathB + meanClassB + meanHealty;
+
+            //p(win ¦ pathC, class1, Healty)
+            valuePathC = meanPathC + meanClassB + meanHealty;
+        }
+
+        finalValue = valuePathA;
+        if (finalValue < valuePathB) finalValue = valuePathB;
+        if (finalValue < valuePathC) finalValue = valuePathC;
 
     }
 
+    void getMeans()
+    {
+        NumberOfWins = classMap[true].Count();
+        NumberOfWins = classMap[false].Count();
+
+        foreach (List<int> list in classMap[true])
+        {
+            //path count
+            if (list[0] == 0)
+            {
+                countPathA++;
+            }
+            else if (list[0] == 1)
+            {
+                countPathB++;
+            }
+            else if (list[0] == 2)
+            {
+                countPathC++;
+            }
+
+            //class count
+            if (list[1] == 0)
+            {
+                countClassA++;
+            }
+            else if (list[1] == 1)
+            {
+                countClassB++;
+            }
+
+            //healthy count
+            if (list[2] == 0)
+            {
+                countHealty++;
+            }
+            else if (list[2] == 1)
+            {
+                countUnhealthy++;
+            }
+        }
+
+        meanClassA = countClassA / (NumberOfWins);
+        meanClassB = countClassB / (NumberOfWins);
+
+        meanHealty = countHealty / (NumberOfWins);
+        meanUnhealthy = countUnHealty / (NumberOfWins);
+
+        meanPathA = countPathA / (NumberOfWins);
+        meanPathB = countPathB / (NumberOfWins);
+        meanPathC = countPathC / (NumberOfWins);
+
+    }
     void separateData(List<string> l)
     {
         bool win;
@@ -64,7 +171,7 @@ public class NaiveBayes : MonoBehaviour
             }
             else
             {
-                if (hpRemaining*0.5 >= 50)
+                if (hpRemaining * 0.5 >= 50)
                 {
                     data.Add(1);
                 }
