@@ -21,11 +21,11 @@ public class AIUnit : MonoBehaviour
         Capture, Defend
     }
 
-
     // Private Varibles
     private string teamTag_;
     private bool teamFlagCaptured_;
     private bool enemeyFlagCaptured_;
+    private float moveSpeed;
     private int IDXcounter_;
     public Team team_;
 
@@ -42,7 +42,19 @@ public class AIUnit : MonoBehaviour
     public State state;
 
     public float health;
+    public bool isAlive;
+    public bool didRespawn;
+    Vector3 respawnPos;
     public float maxChaseDistance;
+
+    // Shooting Variables
+    public int shootDamage = 10;
+    public float fireRate = 2.5f;
+    public float shootRange = 50f;
+    public Transform pointOfFire;
+    private WaitForSeconds shotDuration = new WaitForSeconds(0.5f);
+    private LineRenderer bulletLine;
+    private float nextFire;
 
     public Node startNode;
     public Node targetNode;
@@ -50,10 +62,13 @@ public class AIUnit : MonoBehaviour
 
     public bool hasFlag;
 
+    public bool isCapturing;
+
+    private Renderer rend;
+
     // Use this for initialization
     void Start()
     {
-
         // Suppose this could be set with a public enum variable 
         teamTag_ = gameObject.tag;
 
@@ -63,7 +78,7 @@ public class AIUnit : MonoBehaviour
         teamFlagCaptured_ = false;
         enemeyFlagCaptured_ = false;
 
-        Renderer rend = GetComponent<Renderer>();
+        rend = GetComponent<Renderer>();
 
         if (teamTag_ == "BlueTeam")
         {
@@ -76,13 +91,19 @@ public class AIUnit : MonoBehaviour
             rend.material.color = Color.red;
         }
 
+        moveSpeed = 7.5f;
+        isAlive = true;
+        didRespawn = false;
+        respawnPos = gameObject.transform.position;
+        isCapturing = false;
+
+        bulletLine = GetComponent<LineRenderer>();
+
         captureState_ = this.GetComponent<CaptureState>();
         defendState_ = this.GetComponent<DefendState>();
 
         captureState_.enabled = false;
         defendState_.enabled = false;
-
-        //StartCoroutine("waitToStart");
 
         startNode = getClosestNode();
 
@@ -94,120 +115,70 @@ public class AIUnit : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
-        switch (state)
+        if (isAlive == false)
         {
-            case State.Capture:
-                defendState_.enabled = false;
-                captureState_.enabled = true;
-                break;
-
-            case State.Defend:
-                captureState_.enabled = false;
-                defendState_.enabled = true;
-                break;
+            aiSight_.enabled = false;
+            captureState_.enabled = false;
+            defendState_.enabled = false;
+            GetComponent<AIUnit>().enabled = false;
         }
-
-
-        //Check if your flag has been captured
-        if (team_ == Team.Blue && worldManager_.BT_FlagCaptured == true)
+        else
         {
-            captureState_.subState = CaptureState.SubState.Retrieve;
-        }
+            switch (state)
+            {
+                case State.Capture:
+                    defendState_.enabled = false;
+                    captureState_.enabled = true;
+                    break;
 
-
-        //switch (state)
-        //{
-        //    case State.Capture:
-        //        //TODO: Add Decision Making Here
-        //        // Find path to flag 
-        //        // Shoot closest enemy
-        //        // If enemy flag was captured (by another unit), goto and provide cover for flag carrier
-        //        // If carrying flag, 
-        //            // get new path to base
-        //            // call for back up
-        //    break;
-
-        //    case State.Defend:
-        //        //TODO: Add Decision Making Here
-        //        // Shoot closest enemy
-        //        // Do patrol (coin flip based)
-        //    break;
-        //}
-
-        //switch (subState_)
-        //{
-        //    case SubState.Retrieve:
-        //        //TODO: Add Decision Making Here
-        //        // If NOT NEAR enemy flag, goto and recover team flag
-        //        // If NEAR go for flag
-        //        // If seen flag carrier goto and kill
-        //        // If alerted (messaged) goto and kill
-        //        // If 'Defending' chase enemy flag carrier
-        //        // Shoot closest enemy
-        //    break;
-
-        //    case SubState.Cover:
-        //        //TODO: Add Decision Making Here
-        //        // Get path to flag carrier
-        //        // Shoot closest enemy
-        //    break;
-
-        //    case SubState.Fighting:
-        //        //TODO: Add Decision Making Here
-        //        // If health is low
-        //            //run away or call for backup (if allies nearby)
-        //        // If enemy ran away
-        //            // Chase (how long / far) ? 
-        //    break;
-        //}
-
-    }
-
-    IEnumerator waitToStart()
-    {
-        while (AStarManager_.ready == false)
-        {
-            yield return null;
+                case State.Defend:
+                    captureState_.enabled = false;
+                    defendState_.enabled = true;
+                    break;
+            }
         }
     }
 
+    // Returns a new A* Calculated path.
     public void getNewPath(Node startNode, Node endNode)
     {
         AStarManager_.calculatePath(startNode, endNode, out path_, out Npath_);
     }
 
+    //Returns the closest node to the current position of the unit
     public Node getClosestNode()
     {
         return AStarManager_.getNearestNode(this.transform);
     }
 
+    // Advance the unit from one node to the next
     public void moveAlongPath()
     {
-        int maxIDX = path_.Count;
-
-        if (IDXcounter_ >= maxIDX)
+        if (isAlive)
         {
-            IDXcounter_ = 0;
+            int maxIDX = path_.Count;
+
+            if (IDXcounter_ >= maxIDX)
+            {
+                IDXcounter_ = 0;
+            }
+
+            Vector3 targetNode = path_[IDXcounter_];
+
+            float distToNode = Vector3.Distance(transform.position, targetNode);
+
+            if (IDXcounter_ != path_.Count - 1 && distToNode < 1.0f)
+            {
+                IDXcounter_++;
+            }
+
+            transform.LookAt(targetNode);
+            float step = moveSpeed * Time.deltaTime;
+
+            Debug.Log("Step: " + step);
+
+            transform.position = Vector3.MoveTowards(transform.position, targetNode, step);
         }
-
-        Vector3 targetNode = path_[IDXcounter_];
-
-        float distToNode = Vector3.Distance(transform.position, targetNode);
-
-        if (IDXcounter_ != path_.Count - 1 && distToNode < 1.0f)
-        {
-            IDXcounter_++;
-        }
-
-
-        transform.LookAt(targetNode);
-        transform.position = Vector3.MoveTowards(transform.position, targetNode, 7.5f * Time.deltaTime);
-    }
-
-    public void shoot(GameObject target)
-    {
-        Debug.Log("Shooting at Target: " + target.name);
     }
 
     public void flee()
@@ -215,6 +186,7 @@ public class AIUnit : MonoBehaviour
         Debug.Log(this.gameObject.name + " is running away from a fight");
     }
 
+    // Deliver Flag State Enumerator/Update Method
     public IEnumerator deliverFlag(Node startNode)
     {
         path_.Clear();
@@ -222,16 +194,24 @@ public class AIUnit : MonoBehaviour
 
         getNewPath(startNode, deliveryNode);
 
-        Debug.Log("1");
-        while (hasFlag)
+        if (path_.Count != 0)
+        {
+            moveAlongPath();
+        }
+        
+        /*while (hasFlag)
         {
             Debug.Log("Delivering.. " + startNode + ", " + deliveryNode);
             moveAlongPath();
 
             yield return null;
         }
+        */
+        yield return null;
     }
 
+    // Chase State Enumerator/Update Method
+    // Will Chase a target for a Certain Amount of distance before retreating back
     public IEnumerator chase(Vector3 startOfChasePoint, GameObject enemyUnit)
     {
         bool canChase = true;
@@ -258,6 +238,8 @@ public class AIUnit : MonoBehaviour
         }
     }
 
+    // Retreat State Enumerator/Update Method
+    // Returns The unit to a certain position
     public IEnumerator retreat(Vector3 returnPoint)
     {
         bool done = true;
@@ -273,11 +255,13 @@ public class AIUnit : MonoBehaviour
 
             yield return null;
         }
-
     }
 
+    // Patrol State Enumerator/Update Method
+    // Make a Unit patrol randomly between givin points/nodes
     public IEnumerator patrol(List<Node> patrolNodes)
     {
+        Debug.Log(gameObject.name + " is Patrolling");
         int randNum = 0;
         int lastNumberPicked = 0;
 
@@ -315,8 +299,6 @@ public class AIUnit : MonoBehaviour
                         randNum = Random.Range(0, patrolNodes.Count);
                     }
                 }
-
-
             }
             else
             {
@@ -327,12 +309,130 @@ public class AIUnit : MonoBehaviour
         }
     }
 
+    // Capturing State Enumerator/ Update Method
+    // Make the unit advance along a path toward the enemy flag
+    public IEnumerator capturing()
+    {
+        if (isCapturing)
+        {
+            yield break;
+        }
+        else
+        {
+            bool notDone = true;
+            while (notDone)
+            {
+                if (path_.Count != 0)
+                {
+                    moveAlongPath();
+                }
+
+                if (team_ == Team.Blue && worldManager_.BT_FlagCaptured == true)
+                {
+                    if (hasFlag != true)
+                    {
+                        GameObject target = GameObject.Find(targetNode.name);
+                        float distToFlag = Vector3.Distance(transform.position, target.transform.position);
+
+                        if (distToFlag > 250)
+                        {
+                            GetComponent<CaptureState>().subState = CaptureState.SubState.Retrieve;
+                        }
+                    }
+                }
+                yield return null;
+            }
+            notDone = false;
+            Debug.Log("GOT OUT OF WHILE LOOP");
+            yield break;
+        }
+    }
+
+    public void shoot(GameObject target)
+    {
+        if(Time.time > nextFire)
+        {
+            nextFire = Time.time + fireRate;
+
+            StartCoroutine(bulletEffect());
+
+            Vector3 rayOrigin = pointOfFire.position;
+            Vector3 rayDir = target.transform.position - transform.position;
+
+            RaycastHit hit;
+
+            bulletLine.SetPosition(0, pointOfFire.position);
+
+            if(Physics.Raycast(rayOrigin, rayDir, out hit, shootRange))
+            {
+                bulletLine.SetPosition(1, hit.point);
+
+                AIUnit enemyHit = hit.collider.GetComponent<AIUnit>();
+
+                if(enemyHit != null)
+                {
+                    enemyHit.Damage(shootDamage);
+                }
+            }
+            else
+            {
+                bulletLine.SetPosition(1, pointOfFire.position + (rayDir * shootRange));
+            }
+
+        }
+    }
+
+    private IEnumerator bulletEffect()
+    {
+        bulletLine.enabled = true;
+        yield return shotDuration;
+        bulletLine.enabled = false;
+    }
+
+    public void Damage(int damageAmount)
+    {
+        health -= damageAmount;
+
+        if(health <= 0)
+        {
+            //Call Respawn
+            Debug.Log("Unit: " + this.gameObject.name + " is dead");
+            isAlive = false;
+            rend.enabled = false;
+            
+            StartCoroutine(respawn());
+        }
+    }
+
+    public IEnumerator respawn()
+    {
+        yield return new WaitForSeconds(4.0f);
+        transform.position = respawnPos;
+        health = 100;
+        isAlive = true;
+        rend.enabled = true;
+
+        aiSight_.enabled = true;
+        GetComponent<AIUnit>().enabled = true;
+
+        if(state == State.Capture)
+        {
+            captureState_.enabled = true;
+        }else
+        {
+            defendState_.enabled = true;
+        }
+
+        didRespawn = true;
+
+    }
+
     private int genRandNumber(int min, int max)
     {
         return Random.Range(min, max);
     }
 
-    public IEnumerator wait(float duration, bool done)
+    public IEnumerator wait(float duration)
     {
         yield return new WaitForSeconds(duration);
         Debug.Log("Wait over");

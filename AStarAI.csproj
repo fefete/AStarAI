@@ -86,6 +86,7 @@
     <Compile Include="Assets\Scripts\Pathfinding\Body.cs" />
     <Compile Include="Assets\Scripts\Pathfinding\Message.cs" />
     <Compile Include="Assets\Scripts\Pathfinding\Mind.cs" />
+    <Compile Include="Assets\Scripts\Pathfinding\NaiveBayes.cs" />
     <Compile Include="Assets\Scripts\Pathfinding\Node.cs" />
     <Compile Include="Assets\Scripts\Pathfinding\NodeData.cs" />
     <Compile Include="Assets\Scripts\Pathfinding\Sensor.cs" />

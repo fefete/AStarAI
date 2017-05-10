@@ -17,6 +17,9 @@ public class WorldManager : MonoBehaviour {
 
     public GameObject blueFlag;
     public GameObject redFlag;
+
+    public Flag bf_script;
+
     private Vector3 bf_basePos;
     private Vector3 rf_basePos;
 
@@ -40,6 +43,8 @@ public class WorldManager : MonoBehaviour {
         bf_basePos = blueFlag.transform.position;
         rf_basePos = redFlag.transform.position;
 
+        bf_script = blueFlag.GetComponent<Flag>();
+
     }
 	
 	// Update is called once per frame
@@ -48,12 +53,10 @@ public class WorldManager : MonoBehaviour {
         if(RT_FlagCaptured == true)
         {
             redFlag.transform.position = blueTeamFlagCarrier.transform.position;
-            blueTeamFlagCarrier.GetComponent<AIUnit>().hasFlag = true;
         }
-        else if(BT_FlagCaptured == true)
+        if(BT_FlagCaptured == true)
         {
             blueFlag.transform.position = redTeamFlagCarrier.transform.position;
-            redTeamFlagCarrier.GetComponent<AIUnit>().hasFlag = true;
         }
 
         if(RF_CapturedAndDelivered == true)
@@ -66,10 +69,14 @@ public class WorldManager : MonoBehaviour {
         if (BF_CapturedAndDelivered == true)
         {
             RT_Score++;
+            bf_script.isCaptured = false;
             BT_FlagCaptured = false;
             blueFlag.transform.position = bf_basePos;
             BF_CapturedAndDelivered = false;
         }
+
+        Debug.Log("Score Blue: " + BT_Score);
+        Debug.Log("Score Red: " + RT_Score);
 
     }
 }

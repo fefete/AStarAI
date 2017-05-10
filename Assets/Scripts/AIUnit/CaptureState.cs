@@ -19,7 +19,7 @@ public class CaptureState : MonoBehaviour {
         // Retrieve - Kill enemy flag Carrier (get your team flag back)
         // Fighting - Currently in combat
         //
-        DeliverFlag, CoverFlagCarrier, Retrieve, Fighting, Chase, Retreat
+        DeliverFlag, CoverFlagCarrier, Retrieve, Fighting, Chase, Retreat, Capturing
     }
 
     //Set State Variables
@@ -32,9 +32,16 @@ public class CaptureState : MonoBehaviour {
         }
         set
         {
-            //exitState(subState_)
-            subState_ = value;
-            changeState(subState_);
+            bool done = false;
+            while (done == false)
+            {
+                if (exitState(subState_))
+                {
+                    subState_ = value;
+                    changeState(subState_);
+                    done = true;
+                }
+            }
         }
     }
 
@@ -49,38 +56,44 @@ public class CaptureState : MonoBehaviour {
         //Get Path to Flag
         aiUnit_.getNewPath(aiUnit_.startNode, aiUnit_.targetNode);
 
-	}
+        subState = SubState.Capturing;
+    }
 	
 	// Update is called once per frame
 	void Update () {
 
-        //TODO: Fix this / move 
-        if (aiUnit_.path_.Count != 0)
+        if (aiUnit_.isAlive)
         {
-            aiUnit_.moveAlongPath();
+            if (aiSight_.hasTarget)
+            {
+                enemyUnitTarget_ = aiSight_.GetTarget();
+
+                float distToTarget = Vector3.Distance(enemyUnitTarget_.transform.position, transform.position);
+
+                if (distToTarget < aiUnit_.shootRange)
+                {
+                    enemyUnitTarget_ = aiSight_.GetTarget();
+                    aiUnit_.shoot(enemyUnitTarget_);
+                    //subState = SubState.Fighting;
+                }
+            }
+            else
+            {
+                enemyUnitTarget_ = null;
+            }
+        }
+        if (aiUnit_.didRespawn)
+        {
+            restartCaptureState();
+            aiUnit_.didRespawn = false;
         }
 
-        //if (aiSight_.hasTarget)
-        //{
-        //    enemyUnitTarget_ = aiSight_.GetTarget();
-
-        //    float distToTarget = Vector3.Distance(enemyUnitTarget_.transform.position, transform.position);
-
-        //    if (distToTarget < 45.0f)
-        //    {
-        //        //enemyUnitTarget_ = aiSight_.GetTarget();
-        //        //aiUnit_.shoot(enemyUnitTarget_);
-        //        //subState = SubState.Fighting;
-        //    }
-        //}
-        //else
-        //{
-        //    enemyUnitTarget_ = null;
-        //}
     }
 
+    // Changes from one state to another
     void changeState(SubState newState)
     {
+        Debug.Log("Entered new state: " + newState);
         switch (newState)
         {
             case SubState.Retrieve:
@@ -91,6 +104,12 @@ public class CaptureState : MonoBehaviour {
                 // If alerted (messaged) goto and kill
 
                 Debug.Log("Retrive Flag");
+
+            break;
+
+            case SubState.Capturing:
+                StopCoroutine(aiUnit_.GetComponent<AIUnit>().capturing());
+                StartCoroutine(aiUnit_.GetComponent<AIUnit>().capturing());
 
             break;
 
@@ -132,10 +151,42 @@ public class CaptureState : MonoBehaviour {
                 //StartCoroutine(aiUnit_.GetComponent<AIUnit>().chase(startOfChasePoint, enemyUnitTarget_));
              
             break;
-
-
         }
 
+    }
+
+    bool exitState(SubState oldState)
+    {
+        Debug.Log("Left state: " + oldState);
+        switch (oldState)
+        {
+            case SubState.Retrieve:
+
+
+            break;
+
+            case SubState.Capturing:
+                StopCoroutine(aiUnit_.GetComponent<AIUnit>().capturing());
+
+            break;
+
+            case SubState.DeliverFlag:
+                Node startNode = aiUnit_.getClosestNode();
+                StopCoroutine(aiUnit_.GetComponent<AIUnit>().deliverFlag(startNode));
+
+            break;
+                
+        }
+
+        return true;
+    }
+
+    private void restartCaptureState()
+    {
+        aiUnit_.startNode = aiUnit_.getClosestNode();
+
+        aiUnit_.getNewPath(aiUnit_.startNode, aiUnit_.targetNode);
+        subState = SubState.Capturing;
     }
 
     public void OnTriggerEnter(Collider other)
@@ -144,22 +195,26 @@ public class CaptureState : MonoBehaviour {
         if(other.gameObject.name == "RedFlag" && aiUnit_.team_ != AIUnit.Team.Red)
         {
             subState = SubState.DeliverFlag;
+            aiUnit_.hasFlag = true;
         }
         if(other.gameObject.name == "BlueFlag" && aiUnit_.team_ != AIUnit.Team.Blue)
         {
             subState = SubState.DeliverFlag;
+            aiUnit_.hasFlag = true;
         }
 
         //Check if the flag carrie has made it to the delivery point
-        if (other.gameObject.name == "RedFlag" && aiUnit_.team_ == AIUnit.Team.Red && aiUnit_.hasFlag == true)
+        if (other.gameObject.name == "FlagDeliveryCollider(Red)" && aiUnit_.team_ == AIUnit.Team.Red && aiUnit_.hasFlag == true)
         {
             aiUnit_.worldManager_.BF_CapturedAndDelivered = true;
             aiUnit_.hasFlag = false;
+            restartCaptureState();
         }
-        if (other.gameObject.name == "BlueFlag" && aiUnit_.team_ == AIUnit.Team.Blue && aiUnit_.hasFlag == true)
+        if (other.gameObject.name == "FlagDeliveryCollider(Blue)" && aiUnit_.team_ == AIUnit.Team.Blue && aiUnit_.hasFlag == true)
         {
             aiUnit_.worldManager_.RF_CapturedAndDelivered = true;
             aiUnit_.hasFlag = false;
+            restartCaptureState();
         }
     }
 

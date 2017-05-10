@@ -54,29 +54,36 @@ public class Flag : MonoBehaviour {
         {
             GetComponent<SphereCollider>().enabled = false;
         }
+        else
+        {
+            GetComponent<SphereCollider>().enabled = true;
+        }
 
 	}
 
 
     private void OnTriggerEnter(Collider other)
     {
-        if (team == Team.Red)
+        if (isCaptured == false)
         {
-            if (other.gameObject.tag == "BlueTeam")
+            if (team == Team.Red)
             {
-                worldManager.RT_FlagCaptured = true;
-                worldManager.blueTeamFlagCarrier = other.gameObject;
-                isCaptured = true;
-            }
+                if (other.gameObject.tag == "BlueTeam")
+                {
+                    worldManager.RT_FlagCaptured = true;
+                    worldManager.blueTeamFlagCarrier = other.gameObject;
+                    isCaptured = true;
+                }
 
-        }
-        else
-        {
-            if (other.gameObject.tag == "RedTeam")
+            }
+            else
             {
-                worldManager.BT_FlagCaptured = true;
-                worldManager.redTeamFlagCarrier = other.gameObject;
-                isCaptured = true;
+                if (other.gameObject.tag == "RedTeam")
+                {
+                    worldManager.BT_FlagCaptured = true;
+                    worldManager.redTeamFlagCarrier = other.gameObject;
+                    isCaptured = true;
+                }
             }
         }
     }
