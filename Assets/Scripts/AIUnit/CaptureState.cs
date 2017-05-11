@@ -19,7 +19,7 @@ public class CaptureState : MonoBehaviour {
         // Retrieve - Kill enemy flag Carrier (get your team flag back)
         // Fighting - Currently in combat
         //
-        DeliverFlag, CoverFlagCarrier, Retrieve, Fighting, Chase, Retreat, Capturing
+        DeliverFlag, CoverFlagCarrier, Fighting, Chase, Capturing
     }
 
     //Set State Variables
@@ -35,12 +35,12 @@ public class CaptureState : MonoBehaviour {
             bool done = false;
             while (done == false)
             {
-                if (exitState(subState_))
-                {
+                //if (exitState(subState_))
+                //{
                     subState_ = value;
                     changeState(subState_);
                     done = true;
-                }
+                //}
             }
         }
     }
@@ -64,6 +64,11 @@ public class CaptureState : MonoBehaviour {
 
         if (aiUnit_.isAlive)
         {
+            if (aiUnit_.didRespawn)
+            {
+                aiUnit_.didRespawn = false;
+                restartCaptureState();
+            }
             if (aiSight_.hasTarget)
             {
                 enemyUnitTarget_ = aiSight_.GetTarget();
@@ -74,7 +79,7 @@ public class CaptureState : MonoBehaviour {
                 {
                     enemyUnitTarget_ = aiSight_.GetTarget();
                     aiUnit_.shoot(enemyUnitTarget_);
-                    //subState = SubState.Fighting;
+                    subState = SubState.Fighting;
                 }
             }
             else
@@ -82,97 +87,59 @@ public class CaptureState : MonoBehaviour {
                 enemyUnitTarget_ = null;
             }
         }
-        if (aiUnit_.didRespawn)
+        else
         {
-            restartCaptureState();
-            aiUnit_.didRespawn = false;
+            StopAllCoroutines();
         }
-
     }
 
     // Changes from one state to another
     void changeState(SubState newState)
     {
-        Debug.Log("Entered new state: " + newState);
         switch (newState)
         {
-            case SubState.Retrieve:
-                //TODO: Add Decision Making Here
-                // If NOT NEAR enemy flag, goto and recover team flag
-                // If NEAR go for flag
-                // If seen flag carrier goto and kill
-                // If alerted (messaged) goto and kill
-
-                Debug.Log("Retrive Flag");
-
-            break;
-
             case SubState.Capturing:
-                StopCoroutine(aiUnit_.GetComponent<AIUnit>().capturing());
+                StopAllCoroutines();
                 StartCoroutine(aiUnit_.GetComponent<AIUnit>().capturing());
 
             break;
 
             case SubState.DeliverFlag:
+                //StopAllCoroutines();
                 Node startNode = aiUnit_.getClosestNode();
                 StartCoroutine(aiUnit_.GetComponent<AIUnit>().deliverFlag(startNode));
 
             break;
 
-            case SubState.CoverFlagCarrier:
-                //TODO: Add Decision Making Here
-                // Get path to flag carrier
-                // Shoot closest enemy
-                break;
-
             case SubState.Fighting:
-                //TODO: Add Decision Making Here
+
                 // If health is low
-                //run away or call for backup (if allies nearby)
-                // If enemy ran away
-                // Chase (how long / far) ? 
-
-                //if (aiUnit_.health < 20)
-                //{
-                //    aiUnit_.flee();
-                //}
-
-                //if (aiUnit_.health > 50)  // enemy out of sight / retreating
-                //{
-                //    Node closestNode = aiUnit_.getClosestNode();
-
-                //    startOfChasePoint = GameObject.Find(closestNode.name).transform.position; // Find Nearest Node and use x,y,z coords as return point
-                //    subState = SubState.Chase;
-                //}
+                //run away to recovery bay
+                if (aiUnit_.health < 40)
+                {
+                    StartCoroutine(aiUnit_.GetComponent<AIUnit>().flee(aiUnit_.recoveryBay.transform));
+                }
             break;
 
-            case SubState.Chase:
-                
-                //StartCoroutine(aiUnit_.GetComponent<AIUnit>().chase(startOfChasePoint, enemyUnitTarget_));
-             
-            break;
         }
 
     }
 
     bool exitState(SubState oldState)
     {
-        Debug.Log("Left state: " + oldState);
         switch (oldState)
         {
-            case SubState.Retrieve:
-
-
-            break;
-
             case SubState.Capturing:
-                StopCoroutine(aiUnit_.GetComponent<AIUnit>().capturing());
+                //StopAllCoroutines();
+                return true;
+                //StopCoroutine("capturing");
+                //aiUnit_.stopCaptureState();
 
             break;
 
             case SubState.DeliverFlag:
-                Node startNode = aiUnit_.getClosestNode();
-                StopCoroutine(aiUnit_.GetComponent<AIUnit>().deliverFlag(startNode));
+                //StopCoroutine("deliverFlag");
+
 
             break;
                 

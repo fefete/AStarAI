@@ -35,7 +35,9 @@ public class AIUnit : MonoBehaviour
 
     //Public Variables
     public WorldManager worldManager_;
+    public TeamManager teamManager;
     public AStarManager AStarManager_;
+    public GameObject recoveryBay;
     private CaptureState captureState_;
     private DefendState defendState_;
     public AISight aiSight_;
@@ -49,7 +51,7 @@ public class AIUnit : MonoBehaviour
 
     // Shooting Variables
     public int shootDamage = 10;
-    public float fireRate = 2.5f;
+    public float fireRate = 1.0f;
     public float shootRange = 50f;
     public Transform pointOfFire;
     private WaitForSeconds shotDuration = new WaitForSeconds(0.5f);
@@ -142,6 +144,8 @@ public class AIUnit : MonoBehaviour
     // Returns a new A* Calculated path.
     public void getNewPath(Node startNode, Node endNode)
     {
+        path_.Clear();
+        Npath_.Clear();
         AStarManager_.calculatePath(startNode, endNode, out path_, out Npath_);
     }
 
@@ -149,6 +153,11 @@ public class AIUnit : MonoBehaviour
     public Node getClosestNode()
     {
         return AStarManager_.getNearestNode(this.transform);
+    }
+
+    public Node getClosestNodeToPosition(Transform pos)
+    {
+        return AStarManager_.getNearestNode(pos);
     }
 
     // Advance the unit from one node to the next
@@ -175,15 +184,30 @@ public class AIUnit : MonoBehaviour
             transform.LookAt(targetNode);
             float step = moveSpeed * Time.deltaTime;
 
-            Debug.Log("Step: " + step);
-
             transform.position = Vector3.MoveTowards(transform.position, targetNode, step);
         }
     }
 
-    public void flee()
+    public IEnumerator flee(Transform pos)
     {
         Debug.Log(this.gameObject.name + " is running away from a fight");
+        path_.Clear();
+
+        IDXcounter_ = 0;
+
+        Node close = getClosestNode();
+        Node far = getClosestNodeToPosition(pos);
+
+        //WHY THE FUCK DOES THIS FUCK UP
+        AStarManager_.calculatePath(close, far, out path_, out Npath_);
+
+        if (path_.Count != 0)
+        {
+            moveAlongPath();
+        }
+
+        yield return null;
+
     }
 
     // Deliver Flag State Enumerator/Update Method
@@ -198,21 +222,13 @@ public class AIUnit : MonoBehaviour
         {
             moveAlongPath();
         }
-        
-        /*while (hasFlag)
-        {
-            Debug.Log("Delivering.. " + startNode + ", " + deliveryNode);
-            moveAlongPath();
 
-            yield return null;
-        }
-        */
         yield return null;
     }
 
     // Chase State Enumerator/Update Method
     // Will Chase a target for a Certain Amount of distance before retreating back
-    public IEnumerator chase(Vector3 startOfChasePoint, GameObject enemyUnit)
+    public IEnumerator chaseForDistance(Vector3 startOfChasePoint, GameObject enemyUnit)
     {
         bool canChase = true;
         while (canChase == true)
@@ -226,12 +242,42 @@ public class AIUnit : MonoBehaviour
                 //Stop moving/chasing when close enough to the enemy 
                 if (dist > 5.0f)
                 {
-                    transform.position = Vector3.MoveTowards(transform.position, enemyUnit.transform.position, Time.deltaTime);
+                    transform.position = Vector3.MoveTowards(transform.position, enemyUnit.transform.position, moveSpeed * Time.deltaTime);
                 }
             }
             else
             {
                 canChase = false;
+            }
+
+            yield return null;
+        }
+    }
+
+    public IEnumerator chase(GameObject enemyUnit)
+    {
+        bool canChase = true;
+        while (canChase == true)
+        {
+            float dist = Vector3.Distance(enemyUnit.transform.position, transform.position);
+
+            //Stop moving/chasing when close enough to the enemy 
+            if (dist > 5.0f)
+            {
+                Vector3 rayDir = transform.position - enemyUnit.transform.position;
+                RaycastHit rayHit;
+                if (Physics.Raycast(pointOfFire.position, rayDir, out rayHit))
+                {
+                    if(rayHit.collider.tag != enemyUnit.tag)
+                    {
+                        getNewPath(getClosestNode(), getClosestNodeToPosition(enemyUnit.transform));
+                        IDXcounter_ = 0;
+                        moveAlongPath();
+
+                    }
+                }
+                
+                transform.position = Vector3.MoveTowards(transform.position, enemyUnit.transform.position, moveSpeed * Time.deltaTime);
             }
 
             yield return null;
@@ -320,8 +366,10 @@ public class AIUnit : MonoBehaviour
         else
         {
             bool notDone = true;
+            IDXcounter_ = 0;
             while (notDone)
             {
+                Debug.Log("getting flag " + gameObject.name);
                 if (path_.Count != 0)
                 {
                     moveAlongPath();
@@ -334,9 +382,24 @@ public class AIUnit : MonoBehaviour
                         GameObject target = GameObject.Find(targetNode.name);
                         float distToFlag = Vector3.Distance(transform.position, target.transform.position);
 
-                        if (distToFlag > 250)
+                        if (distToFlag > 60)
                         {
-                            GetComponent<CaptureState>().subState = CaptureState.SubState.Retrieve;
+                            //GetComponent<CaptureState>().subState = CaptureState.SubState.Retrieve;
+                        }
+                    }
+                }
+                else if (team_ == Team.Red && worldManager_.RT_FlagCaptured == true)
+                {
+                    if (hasFlag != true)
+                    {
+                        GameObject target = GameObject.Find(targetNode.name);
+                        float distToFlag = Vector3.Distance(transform.position, target.transform.position);
+
+                        //Debug.Log("Dist: " + distToFlag);
+
+                        if (distToFlag > 25)
+                        {
+                            //GetComponent<CaptureState>().subState = CaptureState.SubState.Retrieve;
                         }
                     }
                 }
@@ -350,35 +413,38 @@ public class AIUnit : MonoBehaviour
 
     public void shoot(GameObject target)
     {
-        if(Time.time > nextFire)
+        if (target.GetComponent<AIUnit>().isAlive)
         {
-            nextFire = Time.time + fireRate;
-
-            StartCoroutine(bulletEffect());
-
-            Vector3 rayOrigin = pointOfFire.position;
-            Vector3 rayDir = target.transform.position - transform.position;
-
-            RaycastHit hit;
-
-            bulletLine.SetPosition(0, pointOfFire.position);
-
-            if(Physics.Raycast(rayOrigin, rayDir, out hit, shootRange))
+            if (Time.time > nextFire)
             {
-                bulletLine.SetPosition(1, hit.point);
+                nextFire = Time.time + fireRate;
 
-                AIUnit enemyHit = hit.collider.GetComponent<AIUnit>();
+                StartCoroutine(bulletEffect());
 
-                if(enemyHit != null)
+                Vector3 rayOrigin = pointOfFire.position;
+                Vector3 rayDir = target.transform.position - transform.position;
+
+                RaycastHit hit;
+
+                bulletLine.SetPosition(0, pointOfFire.position);
+
+                if (Physics.Raycast(rayOrigin, rayDir, out hit, shootRange))
                 {
-                    enemyHit.Damage(shootDamage);
-                }
-            }
-            else
-            {
-                bulletLine.SetPosition(1, pointOfFire.position + (rayDir * shootRange));
-            }
+                    bulletLine.SetPosition(1, hit.point);
 
+                    AIUnit enemyHit = hit.collider.GetComponent<AIUnit>();
+
+                    if (enemyHit != null)
+                    {
+                        enemyHit.Damage(shootDamage);
+                    }
+                }
+                else
+                {
+                    bulletLine.SetPosition(1, pointOfFire.position + (rayDir * shootRange));
+                }
+
+            }
         }
     }
 
@@ -393,13 +459,13 @@ public class AIUnit : MonoBehaviour
     {
         health -= damageAmount;
 
-        if(health <= 0)
+        if (health <= 0)
         {
             //Call Respawn
             Debug.Log("Unit: " + this.gameObject.name + " is dead");
             isAlive = false;
             rend.enabled = false;
-            
+            IDXcounter_ = 0;
             StartCoroutine(respawn());
         }
     }
@@ -410,20 +476,20 @@ public class AIUnit : MonoBehaviour
         transform.position = respawnPos;
         health = 100;
         isAlive = true;
+        didRespawn = true;
         rend.enabled = true;
 
         aiSight_.enabled = true;
         GetComponent<AIUnit>().enabled = true;
 
-        if(state == State.Capture)
+        if (state == State.Capture)
         {
             captureState_.enabled = true;
-        }else
+        }
+        else
         {
             defendState_.enabled = true;
         }
-
-        didRespawn = true;
 
     }
 
@@ -436,6 +502,19 @@ public class AIUnit : MonoBehaviour
     {
         yield return new WaitForSeconds(duration);
         Debug.Log("Wait over");
+    }
+
+    public void stopCaptureState()
+    {
+        StopCoroutine(capturing());
+    }
+
+    public void OnTriggerEnter(Collider other)
+    {
+        if(other.tag == recoveryBay.tag)
+        {
+            health = 100;
+        }
     }
 
 }

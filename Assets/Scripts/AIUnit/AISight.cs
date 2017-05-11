@@ -7,6 +7,7 @@ public class AISight : MonoBehaviour {
     // Public Variables
     public GameObject[] enemies;
     public GameObject pointOfVision;
+    public TeamManager teamManager;
 
     public float fieldOfViewAngle;
 
@@ -85,6 +86,10 @@ public class AISight : MonoBehaviour {
                         if (!enemieInView.Contains(enemyToAdd))
                         {
                             enemieInView.Add(enemyToAdd);
+                        }
+                        if (enemyToAdd.GetComponent<AIUnit>().hasFlag)
+                        {
+                            teamManager.enemyFlagCarrier = enemyToAdd;
                         }
 
                     }

@@ -6,6 +6,7 @@ public class DefendState : MonoBehaviour {
 
     public AISight aiSight_;
     private AIUnit aiUnit_;
+    public GameObject enemyUnitTarget_;
 
     public List<Node> patrolNodes;
 
@@ -76,7 +77,34 @@ public class DefendState : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 
-        //get nearest node find 2/3 close nodes, randomly select which one to path to, wait randomly path to another
+        if (aiUnit_.isAlive)
+        {
+            if (aiUnit_.didRespawn)
+            {
+                aiUnit_.didRespawn = false;
+            }
+            if (aiSight_.hasTarget)
+            {
+                enemyUnitTarget_ = aiSight_.GetTarget();
+
+                float distToTarget = Vector3.Distance(enemyUnitTarget_.transform.position, transform.position);
+
+                if (distToTarget <= aiUnit_.shootRange)
+                {
+                    enemyUnitTarget_ = aiSight_.GetTarget();
+                    aiUnit_.shoot(enemyUnitTarget_);
+                    subState = SubState.Fighting;
+                }
+            }
+            else
+            {
+                enemyUnitTarget_ = null;
+            }
+        }
+        else
+        {
+            StopAllCoroutines();
+        }
 
 
     }
@@ -109,7 +137,7 @@ public class DefendState : MonoBehaviour {
             break;
 
             case SubState.Fighting:
-
+                Debug.Log("Defend: Fighting");
             break;
 
             case SubState.Chase:
