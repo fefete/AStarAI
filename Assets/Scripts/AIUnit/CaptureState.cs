@@ -98,7 +98,7 @@ public class CaptureState : MonoBehaviour {
                 Debug.Log("Capture: Fighting");
                 // If health is low
                 //run away to recovery bay
-                if (aiUnit_.health < 40)
+                if (aiUnit_.health <= 40)
                 {
                     StartCoroutine(aiUnit_.GetComponent<AIUnit>().flee(aiUnit_.recoveryBay.transform));
                 }

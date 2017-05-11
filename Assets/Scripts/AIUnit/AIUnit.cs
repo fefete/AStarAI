@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class AIUnit : MonoBehaviour
 {
@@ -70,6 +71,9 @@ public class AIUnit : MonoBehaviour
 
     private Renderer rend;
 
+    public Text MainStateTXT;
+    public Text SubStateTXT;
+
     // Use this for initialization
     void Start()
     {
@@ -134,13 +138,18 @@ public class AIUnit : MonoBehaviour
                 case State.Capture:
                     defendState_.enabled = false;
                     captureState_.enabled = true;
+                    MainStateTXT.text = "Capture";
+                    SubStateTXT.text = GetComponent<CaptureState>().subState.ToString();
                     break;
 
                 case State.Defend:
                     captureState_.enabled = false;
                     defendState_.enabled = true;
+                    MainStateTXT.text = "Defend";
+                    SubStateTXT.text = GetComponent<DefendState>().subState.ToString();
                     break;
             }
+
         }
     }
 
@@ -202,7 +211,6 @@ public class AIUnit : MonoBehaviour
             Node close = getClosestNode();
             Node far = getClosestNodeToPosition(pos);
 
-            //WHY THE FUCK DOES THIS FUCK UP
             AStarManager_.calculatePath(close, far, out path_, out Npath_);
 
             IDXcounter_ = 0;
@@ -229,6 +237,8 @@ public class AIUnit : MonoBehaviour
         {
             moveAlongPath();
         }
+
+        checkForEnemies();
 
         yield return null;
     }
@@ -328,7 +338,7 @@ public class AIUnit : MonoBehaviour
 
         while (true)
         {
-
+            checkForEnemies();
             if (randNum != lastNumberPicked)
             {
                 targetNode = patrolNodes[randNum];
@@ -384,34 +394,6 @@ public class AIUnit : MonoBehaviour
 
                 checkForEnemies();
 
-                if (team_ == Team.Blue && worldManager_.BT_FlagCaptured == true)
-                {
-                    if (hasFlag != true)
-                    {
-                        GameObject target = GameObject.Find(targetNode.name);
-                        float distToFlag = Vector3.Distance(transform.position, target.transform.position);
-
-                        if (distToFlag > 60)
-                        {
-                            //GetComponent<CaptureState>().subState = CaptureState.SubState.Retrieve;
-                        }
-                    }
-                }
-                else if (team_ == Team.Red && worldManager_.RT_FlagCaptured == true)
-                {
-                    if (hasFlag != true)
-                    {
-                        GameObject target = GameObject.Find(targetNode.name);
-                        float distToFlag = Vector3.Distance(transform.position, target.transform.position);
-
-                        //Debug.Log("Dist: " + distToFlag);
-
-                        if (distToFlag > 25)
-                        {
-                            //GetComponent<CaptureState>().subState = CaptureState.SubState.Retrieve;
-                        }
-                    }
-                }
                 yield return null;
             }
             notDone = false;
@@ -438,7 +420,7 @@ public class AIUnit : MonoBehaviour
                 }
                 if(state == State.Defend)
                 {
-                    GetComponent<CaptureState>().subState = CaptureState.SubState.Fighting;
+                    GetComponent<DefendState>().subState = DefendState.SubState.Fighting;
                 }
             }
         }
@@ -551,6 +533,10 @@ public class AIUnit : MonoBehaviour
         if(other.tag == recoveryBay.tag)
         {
             health = 100;
+            if(isFleeing == true)
+            {
+                isFleeing = false;
+            }
         }
     }
 

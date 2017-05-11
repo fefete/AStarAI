@@ -90,6 +90,7 @@
     <Compile Include="Assets\Scripts\Pathfinding\Node.cs" />
     <Compile Include="Assets\Scripts\Pathfinding\NodeData.cs" />
     <Compile Include="Assets\Scripts\Pathfinding\Sensor.cs" />
+    <Compile Include="Assets\Scripts\World\BillboardText.cs" />
     <Compile Include="Assets\Scripts\World\Flag.cs" />
     <Compile Include="Assets\Scripts\World\TeamManager.cs" />
     <Compile Include="Assets\Scripts\World\WorldManager.cs" />

@@ -17,7 +17,7 @@ public class DefendState : MonoBehaviour {
         // Retrieve - Kill enemy flag Carrier (get your team flag back)
         // Fighting - Currently in combat
         //
-        Patrol, CoverFlagCarrier, Retrieve, Fighting, Chase, Retreat
+        Patrol, Retrieve, Fighting, Chase
     }
 
     //Set State Variables
@@ -130,15 +130,13 @@ public class DefendState : MonoBehaviour {
 
             break;
 
-            case SubState.CoverFlagCarrier:
-                //TODO: Add Decision Making Here
-                // Get path to flag carrier
-                // Shoot closest enemy
-            break;
-
             case SubState.Fighting:
                 Debug.Log("Defend: Fighting");
-            break;
+                if (aiUnit_.health <= 40)
+                {
+                    StartCoroutine(aiUnit_.GetComponent<AIUnit>().flee(aiUnit_.recoveryBay.transform));
+                }
+                break;
 
             case SubState.Chase:
 
