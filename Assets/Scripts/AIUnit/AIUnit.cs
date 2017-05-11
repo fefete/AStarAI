@@ -50,6 +50,7 @@ public class AIUnit : MonoBehaviour
     public float maxChaseDistance;
 
     // Shooting Variables
+    public GameObject enemyUnitTarget_;
     public int shootDamage = 10;
     public float fireRate = 1.0f;
     public float shootRange = 50f;
@@ -65,6 +66,7 @@ public class AIUnit : MonoBehaviour
     public bool hasFlag;
 
     public bool isCapturing;
+    public bool isFleeing;
 
     private Renderer rend;
 
@@ -98,6 +100,7 @@ public class AIUnit : MonoBehaviour
         didRespawn = false;
         respawnPos = gameObject.transform.position;
         isCapturing = false;
+        enemyUnitTarget_ = null;
 
         bulletLine = GetComponent<LineRenderer>();
 
@@ -190,24 +193,28 @@ public class AIUnit : MonoBehaviour
 
     public IEnumerator flee(Transform pos)
     {
-        Debug.Log(this.gameObject.name + " is running away from a fight");
-        path_.Clear();
-
-        IDXcounter_ = 0;
-
-        Node close = getClosestNode();
-        Node far = getClosestNodeToPosition(pos);
-
-        //WHY THE FUCK DOES THIS FUCK UP
-        AStarManager_.calculatePath(close, far, out path_, out Npath_);
-
-        if (path_.Count != 0)
+        if (!isFleeing)
         {
-            moveAlongPath();
+            isFleeing = true;
+            Debug.Log(this.gameObject.name + " is running away from a fight");
+            path_.Clear();
+
+            Node close = getClosestNode();
+            Node far = getClosestNodeToPosition(pos);
+
+            //WHY THE FUCK DOES THIS FUCK UP
+            AStarManager_.calculatePath(close, far, out path_, out Npath_);
+
+            IDXcounter_ = 0;
+
+            if (path_.Count != 0)
+            {
+                moveAlongPath();
+
+            }
+
+            yield return null;
         }
-
-        yield return null;
-
     }
 
     // Deliver Flag State Enumerator/Update Method
@@ -375,6 +382,8 @@ public class AIUnit : MonoBehaviour
                     moveAlongPath();
                 }
 
+                checkForEnemies();
+
                 if (team_ == Team.Blue && worldManager_.BT_FlagCaptured == true)
                 {
                     if (hasFlag != true)
@@ -408,6 +417,34 @@ public class AIUnit : MonoBehaviour
             notDone = false;
             Debug.Log("GOT OUT OF WHILE LOOP");
             yield break;
+        }
+    }
+
+    public void checkForEnemies()
+    {
+        if (aiSight_.hasTarget)
+        {
+            enemyUnitTarget_ = aiSight_.GetTarget();
+
+            float distToTarget = Vector3.Distance(enemyUnitTarget_.transform.position, transform.position);
+
+            if (distToTarget < shootRange)
+            {
+                enemyUnitTarget_ = aiSight_.GetTarget();
+                shoot(enemyUnitTarget_);
+                if (state == State.Capture)
+                {
+                    GetComponent<CaptureState>().subState = CaptureState.SubState.Fighting;
+                }
+                if(state == State.Defend)
+                {
+                    GetComponent<CaptureState>().subState = CaptureState.SubState.Fighting;
+                }
+            }
+        }
+        else
+        {
+            enemyUnitTarget_ = null;
         }
     }
 

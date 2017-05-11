@@ -69,23 +69,6 @@ public class CaptureState : MonoBehaviour {
                 aiUnit_.didRespawn = false;
                 restartCaptureState();
             }
-            if (aiSight_.hasTarget)
-            {
-                enemyUnitTarget_ = aiSight_.GetTarget();
-
-                float distToTarget = Vector3.Distance(enemyUnitTarget_.transform.position, transform.position);
-
-                if (distToTarget < aiUnit_.shootRange)
-                {
-                    enemyUnitTarget_ = aiSight_.GetTarget();
-                    aiUnit_.shoot(enemyUnitTarget_);
-                    subState = SubState.Fighting;
-                }
-            }
-            else
-            {
-                enemyUnitTarget_ = null;
-            }
         }
         else
         {
@@ -112,7 +95,7 @@ public class CaptureState : MonoBehaviour {
             break;
 
             case SubState.Fighting:
-
+                Debug.Log("Capture: Fighting");
                 // If health is low
                 //run away to recovery bay
                 if (aiUnit_.health < 40)
