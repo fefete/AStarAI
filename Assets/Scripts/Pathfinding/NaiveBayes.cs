@@ -3,30 +3,29 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
-/*
 public class NaiveBayes : MonoBehaviour
 {
     Dictionary<bool, List<List<int>>> classMap;
     List<string> listA = new List<string>();
 
     //data for class
-    int NumberOfWins;
-    int NumberOfLoses;
+    float NumberOfWins;
+    float NumberOfLoses;
 
     //data for agent class
-    int countClassA;
-    int countClassB;
+    float countClassA;
+    float countClassB;
     float meanClassA;
     float meanClassB;
 
-    int countHealty;
-    int countUnhealthy;
+    float countHealty;
+    float countUnhealthy;
     float meanHealty;
     float meanUnhealthy;
 
-    int countPathA;
-    int countPathB;
-    int countPathC;
+    float countPathA;
+    float countPathB;
+    float countPathC;
     float meanPathA;
     float meanPathB;
     float meanPathC;
@@ -49,7 +48,13 @@ public class NaiveBayes : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-
+        classMap = new Dictionary<bool, List<List<int>>>();
+        classMap[true] = new List<List<int>>();
+        classMap[false] = new List<List<int>>();
+        string potato = Application.dataPath + "/datatest.csv";
+        readCSV(potato);
+        separateData(listA);
+        getMeans();
     }
 
     // Update is called once per frame
@@ -58,7 +63,7 @@ public class NaiveBayes : MonoBehaviour
 
     }
 
-    void Classify(int classtype)
+    public string Classify(int classtype)
     {
         float valuePathA = 0;
         float valuePathB = 0;
@@ -67,7 +72,7 @@ public class NaiveBayes : MonoBehaviour
         if (classtype == 0)
         {
             //p(win ¦ pathA, class0, Healty)
-             valuePathA = meanPathA + meanClassA + meanHealty;
+            valuePathA = meanPathA + meanClassA + meanHealty;
 
             //p(win ¦ pathB, class0, Healty)
             valuePathB = meanPathB + meanClassA + meanHealty;
@@ -75,7 +80,8 @@ public class NaiveBayes : MonoBehaviour
             //p(win ¦ pathC, class0, Healty)
             valuePathC = meanPathC + meanClassA + meanHealty; ;
         }
-        else {
+        else
+        {
             //p(win ¦ pathA, class1, Healty)
             valuePathA = meanPathA + meanClassB + meanHealty;
 
@@ -86,16 +92,30 @@ public class NaiveBayes : MonoBehaviour
             valuePathC = meanPathC + meanClassB + meanHealty;
         }
 
+        string path = "A";
         finalValue = valuePathA;
-        if (finalValue < valuePathB) finalValue = valuePathB;
-        if (finalValue < valuePathC) finalValue = valuePathC;
+        if (finalValue < valuePathB)
+        {
+            finalValue = valuePathB;
+            path = "B";
 
+        }
+        if (finalValue < valuePathC)
+        {
+            finalValue = valuePathC;
+            path = "C";
+
+        }
+
+
+        string final = "Best path is " + path + " with a probability of " + finalValue + "\n" + "The values where: \n A:" + valuePathA + "\n" + "B:" + valuePathB + "\n" + "C:" + valuePathC + "\n";
+        return final;
     }
 
     void getMeans()
     {
-        NumberOfWins = classMap[true].Count();
-        NumberOfWins = classMap[false].Count();
+        NumberOfWins = classMap[true].Count;
+        NumberOfWins = classMap[false].Count;
 
         foreach (List<int> list in classMap[true])
         {
@@ -124,11 +144,11 @@ public class NaiveBayes : MonoBehaviour
             }
 
             //healthy count
-            if (list[2] == 0)
+            if (list[2] == 1)
             {
                 countHealty++;
             }
-            else if (list[2] == 1)
+            else if (list[2] == 0)
             {
                 countUnhealthy++;
             }
@@ -138,7 +158,7 @@ public class NaiveBayes : MonoBehaviour
         meanClassB = countClassB / (NumberOfWins);
 
         meanHealty = countHealty / (NumberOfWins);
-        meanUnhealthy = countUnHealty / (NumberOfWins);
+        meanUnhealthy = countUnhealthy / (NumberOfWins);
 
         meanPathA = countPathA / (NumberOfWins);
         meanPathB = countPathB / (NumberOfWins);
@@ -150,7 +170,7 @@ public class NaiveBayes : MonoBehaviour
         bool win;
         foreach (string s in l)
         {
-            string[] splitted = s.Split(',');
+            string[] splitted = s.Split(';');
             List<int> data = new List<int>();
             //path number
             int pathID = int.Parse(splitted[1]);
@@ -159,6 +179,7 @@ public class NaiveBayes : MonoBehaviour
             int agentClass = int.Parse(splitted[2]);
             data.Add(agentClass);
             int hpRemaining = int.Parse(splitted[3]);
+            // 1 = healthy
             if (agentClass == 0)
             {
                 if (hpRemaining >= 50)
@@ -197,18 +218,16 @@ public class NaiveBayes : MonoBehaviour
     void readCSV(string path)
     {
 
-        using (var fs = File.OpenRead(path))
-        using (var reader = new StreamReader(fs))
-        {
+        FileStream fs = File.OpenRead(path);
+        StreamReader reader = new StreamReader(fs);
 
-            while (!reader.EndOfStream)
-            {
-                var line = reader.ReadLine();
-                listA.Add(line);
-            }
+        while (!reader.EndOfStream)
+        {
+            var line = reader.ReadLine();
+            listA.Add(line);
         }
+
 
     }
 
 }
-*/
