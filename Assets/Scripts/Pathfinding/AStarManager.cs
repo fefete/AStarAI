@@ -22,7 +22,6 @@ public class AStarManager : MonoBehaviour
                 {
                     if (hit.transform.gameObject == toCheck.gameObject)
                     {
-                        //Debug.DrawRay(actual.transform.position, toCheck.transform.position - actual.transform.position, Color.magenta, 1000000);
                         actual.accessibleNodes.Add(toCheck);
                     }
                 }
@@ -186,7 +185,7 @@ public class AStarManager : MonoBehaviour
             endNode = endNode.CameFrom;
             if (counter != 0)
             {
-                Debug.DrawRay(new Vector3(path[counter - 1].x, 1.0f, path[counter - 1].z), new Vector3(path[counter].x, 1.0f, path[counter].z) - new Vector3(path[counter - 1].x, 1.0f, path[counter - 1].z), Color.magenta, 1000000);
+                Debug.DrawRay(new Vector3(path[counter - 1].x, 1.0f, path[counter - 1].z), new Vector3(path[counter].x, 1.0f, path[counter].z) - new Vector3(path[counter - 1].x, 1.0f, path[counter - 1].z), Color.magenta, 30);
 
             }
             counter++;
