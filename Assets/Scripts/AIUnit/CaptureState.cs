@@ -14,12 +14,7 @@ public class CaptureState : MonoBehaviour {
 
     public enum SubState
     {
-        //
-        // Cover - Cover flag carrier
-        // Retrieve - Kill enemy flag Carrier (get your team flag back)
-        // Fighting - Currently in combat
-        //
-        DeliverFlag, CoverFlagCarrier, Fighting, Chase, Capturing
+        DeliverFlag, Empty, Fighting, Chase, Capturing
     }
 
     //Set State Variables
@@ -35,12 +30,12 @@ public class CaptureState : MonoBehaviour {
             bool done = false;
             while (done == false)
             {
-                //if (exitState(subState_))
-                //{
+                if (exitState(subState_))
+                {
                     subState_ = value;
                     changeState(subState_);
                     done = true;
-                //}
+                }
             }
         }
     }
@@ -69,6 +64,10 @@ public class CaptureState : MonoBehaviour {
                 aiUnit_.didRespawn = false;
                 restartCaptureState();
             }
+            if(subState == SubState.Empty)
+            {
+                restartCaptureState();
+            }
         }
         else
         {
@@ -82,26 +81,53 @@ public class CaptureState : MonoBehaviour {
         switch (newState)
         {
             case SubState.Capturing:
-                StopAllCoroutines();
-                StartCoroutine(aiUnit_.GetComponent<AIUnit>().capturing());
+                if (!aiUnit_.hasFlag)
+                {
+                    StopAllCoroutines();
+                    StartCoroutine(aiUnit_.GetComponent<AIUnit>().capturing());
+                }else
+                {
+                    subState = SubState.DeliverFlag;
+                }
 
             break;
 
+            case SubState.Empty:
+
+                Debug.Log("Is in empty Capture");
+                StopAllCoroutines();
+                aiUnit_.path_.Clear();
+                //restartCaptureState();
+
+            break;
+
+
             case SubState.DeliverFlag:
-                //StopAllCoroutines();
-                Node startNode = aiUnit_.getClosestNode();
-                StartCoroutine(aiUnit_.GetComponent<AIUnit>().deliverFlag(startNode));
+               
+                if (!aiUnit_.isDelivering)
+                {
+                    aiUnit_.path_.Clear();
+
+                    Node startNode = aiUnit_.getClosestNode();
+                    aiUnit_.getNewPath(startNode, aiUnit_.deliveryNode);
+
+                    if (aiUnit_.path_.Count > 0)
+                    {
+                        aiUnit_.isDelivering = true;
+                        StartCoroutine(aiUnit_.GetComponent<AIUnit>().deliverFlag());
+                    }
+                }
 
             break;
 
             case SubState.Fighting:
-                Debug.Log("Capture: Fighting");
-                // If health is low
-                //run away to recovery bay
-                if (aiUnit_.health <= 40)
+
+                if (!aiUnit_.hasFlag && aiUnit_.isFighting == false)
                 {
-                    StartCoroutine(aiUnit_.GetComponent<AIUnit>().flee(aiUnit_.recoveryBay.transform));
+                    //aiUnit_.isFighting = true;
+                    StartCoroutine(aiUnit_.GetComponent<AIUnit>().fight());
                 }
+
             break;
 
         }
@@ -113,16 +139,20 @@ public class CaptureState : MonoBehaviour {
         switch (oldState)
         {
             case SubState.Capturing:
-                //StopAllCoroutines();
-                return true;
-                //StopCoroutine("capturing");
-                //aiUnit_.stopCaptureState();
+                aiUnit_.path_.Clear();
+                aiUnit_.isCapturing = false;
 
             break;
 
             case SubState.DeliverFlag:
-                //StopCoroutine("deliverFlag");
+                //aiUnit_.path_.Clear();
+                aiUnit_.isDelivering = false;
 
+            break;
+
+            case SubState.Fighting:
+                //aiUnit_.path_.Clear();
+                aiUnit_.isFighting = false;
 
             break;
                 

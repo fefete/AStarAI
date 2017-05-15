@@ -67,7 +67,9 @@ public class AIUnit : MonoBehaviour
     public bool hasFlag;
 
     public bool isCapturing;
+    public bool isFighting;
     public bool isFleeing;
+    public bool isDelivering;
 
     private Renderer rend;
 
@@ -226,48 +228,26 @@ public class AIUnit : MonoBehaviour
     }
 
     // Deliver Flag State Enumerator/Update Method
-    public IEnumerator deliverFlag(Node startNode)
+    public IEnumerator deliverFlag()
     {
-        path_.Clear();
-        IDXcounter_ = 0;
-
-        getNewPath(startNode, deliveryNode);
-
-        if (path_.Count != 0)
+        if (isDelivering)
         {
-            moveAlongPath();
+            IDXcounter_ = 0;
+            yield break;
         }
-
-        checkForEnemies();
-
-        yield return null;
-    }
-
-    // Chase State Enumerator/Update Method
-    // Will Chase a target for a Certain Amount of distance before retreating back
-    public IEnumerator chaseForDistance(Vector3 startOfChasePoint, GameObject enemyUnit)
-    {
-        bool canChase = true;
-        while (canChase == true)
+        else
         {
-            float distFromBeginChase = Vector3.Distance(transform.position, startOfChasePoint);
-
-            if (distFromBeginChase < maxChaseDistance)
+            isDelivering = true;
+            IDXcounter_ = 0;
+            while (true)
             {
-                float dist = Vector3.Distance(enemyUnit.transform.position, transform.position);
 
-                //Stop moving/chasing when close enough to the enemy 
-                if (dist > 5.0f)
+                if (path_.Count != 0)
                 {
-                    transform.position = Vector3.MoveTowards(transform.position, enemyUnit.transform.position, moveSpeed * Time.deltaTime);
+                    moveAlongPath();
                 }
+                yield return null;
             }
-            else
-            {
-                canChase = false;
-            }
-
-            yield return null;
         }
     }
 
@@ -285,35 +265,20 @@ public class AIUnit : MonoBehaviour
                 RaycastHit rayHit;
                 if (Physics.Raycast(pointOfFire.position, rayDir, out rayHit))
                 {
-                    if(rayHit.collider.tag != enemyUnit.tag)
+                    if (rayHit.collider.tag != enemyUnit.tag)
                     {
                         getNewPath(getClosestNode(), getClosestNodeToPosition(enemyUnit.transform));
                         IDXcounter_ = 0;
                         moveAlongPath();
 
                     }
+                    else
+                    {
+                        transform.position = Vector3.MoveTowards(transform.position, enemyUnit.transform.position, moveSpeed * Time.deltaTime);
+                    }
                 }
-                
-                transform.position = Vector3.MoveTowards(transform.position, enemyUnit.transform.position, moveSpeed * Time.deltaTime);
-            }
 
-            yield return null;
-        }
-    }
 
-    // Retreat State Enumerator/Update Method
-    // Returns The unit to a certain position
-    public IEnumerator retreat(Vector3 returnPoint)
-    {
-        bool done = true;
-        while (done == true)
-        {
-            Debug.Log("Cant chase anymore, should go back to start point");
-            transform.position = Vector3.MoveTowards(transform.position, returnPoint, 0.1f);
-
-            if (transform.position == returnPoint)
-            {
-                done = false;
             }
 
             yield return null;
@@ -324,6 +289,7 @@ public class AIUnit : MonoBehaviour
     // Make a Unit patrol randomly between givin points/nodes
     public IEnumerator patrol(List<Node> patrolNodes)
     {
+
         Debug.Log(gameObject.name + " is Patrolling");
         int randNum = 0;
         int lastNumberPicked = 0;
@@ -333,7 +299,6 @@ public class AIUnit : MonoBehaviour
         Node currentNode = patrolNodes[0];
         Node targetNode;
         GameObject targetNodeObj;
-
         randNum = Random.Range(0, patrolNodes.Count);
 
         while (true)
@@ -376,17 +341,15 @@ public class AIUnit : MonoBehaviour
     // Make the unit advance along a path toward the enemy flag
     public IEnumerator capturing()
     {
-        if (isCapturing)
+        if (isCapturing || hasFlag)
         {
             yield break;
         }
         else
         {
-            bool notDone = true;
             IDXcounter_ = 0;
-            while (notDone)
+            while (true)
             {
-                Debug.Log("getting flag " + gameObject.name);
                 if (path_.Count != 0)
                 {
                     moveAlongPath();
@@ -396,9 +359,67 @@ public class AIUnit : MonoBehaviour
 
                 yield return null;
             }
-            notDone = false;
-            Debug.Log("GOT OUT OF WHILE LOOP");
+        }
+    }
+
+    public IEnumerator fight()
+    {
+        if (isFighting || hasFlag)
+        {
             yield break;
+        }
+        else
+        {
+            while (true)
+            {
+                //if (!hasFlag)
+                //{
+                    if (enemyUnitTarget_ != null)
+                    {
+                        //Debug.Log("Enemy Target: " + enemyUnitTarget_.name);
+                        shoot(enemyUnitTarget_);
+
+                        if (enemyUnitTarget_.GetComponent<AIUnit>().isAlive == false)
+                        {
+                            if (state == State.Capture)
+                            {
+                                //isFighting = true;
+                                GetComponent<CaptureState>().subState = CaptureState.SubState.Empty;
+                            }
+                            else if (state == State.Defend)
+                            {
+                                //isFighting = true;
+                                GetComponent<DefendState>().subState = DefendState.SubState.Empty;
+                            }
+                        }
+
+                        if (health <= 40)
+                        {
+                            StartCoroutine(flee(recoveryBay.transform));
+                        }
+
+                    }
+                    else
+                    {
+                        if (state == State.Capture)
+                        {
+                            //isFighting = true;
+                            GetComponent<CaptureState>().subState = CaptureState.SubState.Empty;
+                        }
+                        else if (state == State.Defend)
+                        {
+                            //isFighting = true;
+                            GetComponent<DefendState>().subState = DefendState.SubState.Empty;
+                        }
+                    }
+                //}
+                //else
+                //{
+                //    yield break;
+                //}
+
+                yield return null;
+            }
         }
     }
 
@@ -413,14 +434,17 @@ public class AIUnit : MonoBehaviour
             if (distToTarget < shootRange)
             {
                 enemyUnitTarget_ = aiSight_.GetTarget();
-                shoot(enemyUnitTarget_);
                 if (state == State.Capture)
                 {
                     GetComponent<CaptureState>().subState = CaptureState.SubState.Fighting;
                 }
-                if(state == State.Defend)
+                else if (state == State.Defend)
                 {
                     GetComponent<DefendState>().subState = DefendState.SubState.Fighting;
+                }
+                else
+                {
+                    isFighting = false;
                 }
             }
         }
@@ -485,6 +509,24 @@ public class AIUnit : MonoBehaviour
             isAlive = false;
             rend.enabled = false;
             IDXcounter_ = 0;
+            isCapturing = false;
+            isFighting = false;
+            isDelivering = false;
+            isFleeing = false;
+            hasFlag = false;
+
+            if (state == State.Capture)
+            {
+                //isFighting = true;
+                GetComponent<CaptureState>().subState = CaptureState.SubState.Empty;
+            }
+            else if (state == State.Defend)
+            {
+                //isFighting = true;
+                GetComponent<DefendState>().subState = DefendState.SubState.Empty;
+            }
+
+            enemyUnitTarget_ = null;
             StartCoroutine(respawn());
         }
     }
@@ -530,10 +572,10 @@ public class AIUnit : MonoBehaviour
 
     public void OnTriggerEnter(Collider other)
     {
-        if(other.tag == recoveryBay.tag)
+        if (other.tag == recoveryBay.tag)
         {
             health = 100;
-            if(isFleeing == true)
+            if (isFleeing == true)
             {
                 isFleeing = false;
             }
