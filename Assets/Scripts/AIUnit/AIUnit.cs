@@ -288,9 +288,9 @@ public class AIUnit : MonoBehaviour
 
     // Patrol State Enumerator/Update Method
     // Make a Unit patrol randomly between givin points/nodes
-    public IEnumerator patrol(List<Node> patrolNodes)
+    public IEnumerator patrol(List<Node> patrolNodesOriginal)
     {
-
+        List<Node> patrolNodes = patrolNodesOriginal;
         Debug.Log(gameObject.name + " is Patrolling");
         int randNum = 0;
         int lastNumberPicked = 0;

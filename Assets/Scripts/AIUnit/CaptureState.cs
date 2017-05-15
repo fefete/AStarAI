@@ -173,30 +173,33 @@ public class CaptureState : MonoBehaviour {
 
     public void OnTriggerEnter(Collider other)
     {
-        //Check if the AIunit is within range of target flag
-        if(other.gameObject.name == "RedFlag" && aiUnit_.team_ != AIUnit.Team.Red)
+        if (other != null)
         {
-            subState = SubState.DeliverFlag;
-            aiUnit_.hasFlag = true;
-        }
-        if(other.gameObject.name == "BlueFlag" && aiUnit_.team_ != AIUnit.Team.Blue)
-        {
-            subState = SubState.DeliverFlag;
-            aiUnit_.hasFlag = true;
-        }
+            //Check if the AIunit is within range of target flag
+            if (other.gameObject.name == "RedFlag" && aiUnit_.team_ != AIUnit.Team.Red)
+            {
+                subState = SubState.DeliverFlag;
+                aiUnit_.hasFlag = true;
+            }
+            if (other.gameObject.name == "BlueFlag" && aiUnit_.team_ != AIUnit.Team.Blue)
+            {
+                subState = SubState.DeliverFlag;
+                aiUnit_.hasFlag = true;
+            }
 
-        //Check if the flag carrie has made it to the delivery point
-        if (other.gameObject.name == "FlagDeliveryCollider(Red)" && aiUnit_.team_ == AIUnit.Team.Red && aiUnit_.hasFlag == true)
-        {
-            aiUnit_.worldManager_.BF_CapturedAndDelivered = true;
-            aiUnit_.hasFlag = false;
-            restartCaptureState();
-        }
-        if (other.gameObject.name == "FlagDeliveryCollider(Blue)" && aiUnit_.team_ == AIUnit.Team.Blue && aiUnit_.hasFlag == true)
-        {
-            aiUnit_.worldManager_.RF_CapturedAndDelivered = true;
-            aiUnit_.hasFlag = false;
-            restartCaptureState();
+            //Check if the flag carrie has made it to the delivery point
+            if (other.gameObject.name == "FlagDeliveryCollider(Red)" && aiUnit_.team_ == AIUnit.Team.Red && aiUnit_.hasFlag == true)
+            {
+                aiUnit_.worldManager_.BF_CapturedAndDelivered = true;
+                aiUnit_.hasFlag = false;
+                restartCaptureState();
+            }
+            if (other.gameObject.name == "FlagDeliveryCollider(Blue)" && aiUnit_.team_ == AIUnit.Team.Blue && aiUnit_.hasFlag == true)
+            {
+                aiUnit_.worldManager_.RF_CapturedAndDelivered = true;
+                aiUnit_.hasFlag = false;
+                restartCaptureState();
+            }
         }
     }
 

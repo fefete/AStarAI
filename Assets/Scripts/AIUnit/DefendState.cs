@@ -108,7 +108,6 @@ public class DefendState : MonoBehaviour {
         switch (oldState)
         {
             case SubState.Patrol:
-                patrolNodes.Clear();
 
             break;
 
@@ -126,6 +125,7 @@ public class DefendState : MonoBehaviour {
 
     void restartDefendState()
     {
+        patrolNodes.Clear();
         //Find the closest node to the unit, get all the other closer nodes
         Node startNode = aiUnit_.AStarManager_.getNearestNode(this.transform);
         GameObject startNodeObj = GameObject.Find(startNode.name);
