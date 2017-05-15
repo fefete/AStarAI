@@ -135,6 +135,7 @@ public class AIUnit : MonoBehaviour
         }
         else
         {
+            // Force the agent into a main state
             switch (state)
             {
                 case State.Capture:

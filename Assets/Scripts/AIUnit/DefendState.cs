@@ -102,7 +102,7 @@ public class DefendState : MonoBehaviour {
         }
 
     }
-
+    //Exit the current state, resetting data that needs to be
     bool exitState(SubState oldState)
     {
         switch (oldState)

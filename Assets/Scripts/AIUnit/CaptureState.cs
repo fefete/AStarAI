@@ -30,6 +30,7 @@ public class CaptureState : MonoBehaviour {
             bool done = false;
             while (done == false)
             {
+                //First exit the current state
                 if (exitState(subState_))
                 {
                     subState_ = value;
@@ -134,6 +135,7 @@ public class CaptureState : MonoBehaviour {
 
     }
 
+    //Exit the current state, resetting data that needs to be
     bool exitState(SubState oldState)
     {
         switch (oldState)
